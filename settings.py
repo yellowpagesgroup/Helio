@@ -1,3 +1,3 @@
 import os
 
-COMPONENTS_DIRECTORY = os.path.join(os.getcwd(), 'components')
+COMPONENT_DIRECTORIES = (os.path.join(os.getcwd(), 'components'),)
