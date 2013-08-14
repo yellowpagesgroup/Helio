@@ -31,17 +31,17 @@ class TestBaseControllerFunctions(unittest.TestCase):
         self.assertIsNone(bc.parent)
 
     def test_is_root_attribute_set(self):
-        """Root component has is_root set to True."""
+        """Root controller has is_root set to True."""
         self.assertTrue(self.root.is_root)
 
-    def test_unattached_component_path_raises_error(self):
-        """Retrieving the path for an unattached component raises UnattachedControllerError."""
+    def test_unattached_controller_path_raises_error(self):
+        """Retrieving the path for an unattached controller raises UnattachedControllerError."""
         bc = BaseViewController()
         with self.assertRaises(UnattachedControllerError):
             bc.path
 
     def test_child_controller_local_id(self):
-        """A component that is not the root has its local_id set when attached to its parent."""
+        """A controller that is not the root has its local_id set when attached to its parent."""
         parent = BaseViewController()
         child = BaseViewController()
         parent.set_named_child('child-key', child)
@@ -64,7 +64,7 @@ class TestBaseControllerFunctions(unittest.TestCase):
         child.post_attach.assert_called_with()
 
     def test_named_child_replacement_event_calls(self):
-        """Replacing a named child calls the pre_detach and post_detach methods on the final component in the stack that
+        """Replacing a named child calls the pre_detach and post_detach methods on the final controller in the stack that
         is being replaced."""
         child1 = BaseViewController()
         child1.post_attach = MagicMock()
@@ -87,7 +87,7 @@ class TestBaseControllerFunctions(unittest.TestCase):
         self.assertEqual(child.view_state, self.view_state)
 
     def test_named_child_push(self):
-        """After pushing a child to a named stack, it is then retrievable via child. The previous final component on
+        """After pushing a child to a named stack, it is then retrievable via child. The previous final controller on
         the stack should have its pre_detach and post_detach methods called."""
         child1 = BaseViewController()
         child1.pre_detach = MagicMock()

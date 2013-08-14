@@ -2,6 +2,8 @@ from viewstate import ViewState
 
 
 class NotificationCentre(object):
+    """NotificationCentre is used to send notifications between components,
+    and to queue notifications for the client."""
     def __init__(self, view_state):
         if not isinstance(view_state, ViewState):
             raise TypeError("view_state must be an instance of ViewState")

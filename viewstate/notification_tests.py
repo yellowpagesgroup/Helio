@@ -1,5 +1,5 @@
 import unittest
-from mock import MagicMock, patch
+from mock import MagicMock
 from notification import NotificationCentre
 from viewstate import ViewState
 
