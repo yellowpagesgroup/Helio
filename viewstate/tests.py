@@ -74,14 +74,21 @@ class TestViewStateClass(unittest.TestCase):
     def test_component_path_pop(self):
         """A component can be popped from the stack by giving its path to the ViewState."""
         # tree looks like this -> page.one.two.three
+        self.child_two.pop_named_child = MagicMock(return_value=self.child_three)
+        self.child_one.pop_named_child = MagicMock(return_value=self.child_two)
+
         child_three = self.vs.pop_controller('page.one.two.three')
         child_two = self.vs.pop_controller('page.one.two')
-        child_one = self.vs.pop_controller('page.one')
 
         self.assertEqual(self.child_three, child_three)
         self.assertEqual(self.child_two, child_two)
-        self.assertEqual(self.child_one, child_one)
-        self.vs.pop_controller('page')
+        self.child_two.pop_named_child.assert_called_with('three')
+        self.child_one.pop_named_child.assert_called_with('two')
+
+    def test_page_pop_fails(self):
+        """ValueError is raised when trying to pop the root (page)."""
+        self.assertRaises(ValueError, self.vs.pop_controller, 'page')
+
 
 if __name__ == '__main__':
     unittest.main()

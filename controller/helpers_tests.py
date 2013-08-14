@@ -11,7 +11,7 @@ class HelpersTests(unittest.TestCase):
                 mock_import_controllers:
             init_controller('test.component.path', 'arg', kwarg='kwarg')
             mock_import_controllers.assert_called_with('test.component.path')
-            mock_import_controllers.assert_called_with('arg', kwarg='kwarg')
+            mock_controller_class.assert_called_with('arg', kwarg='kwarg')
 
     def test_single_controller_import(self):
         """A single controller is imported by its module path then returned."""

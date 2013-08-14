@@ -68,3 +68,5 @@ class ViewState(object):
 
     def pop_controller(self, path):
         """Pop a controller from the stack at the given path."""
+        parent_controller, child_key = self._parent_controller_and_child_key_from_path(path)
+        return parent_controller.pop_named_child(child_key)
