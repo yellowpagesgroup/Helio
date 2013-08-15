@@ -1,3 +1,5 @@
-test( "two test", function() {
-  ok( 1 == "1", "Passed!" );
+describe("A suite", function() {
+  it("contains spec with an expectation", function() {
+    expect(true).toBe(true);
+  });
 });
