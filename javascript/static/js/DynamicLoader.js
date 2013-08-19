@@ -1,15 +1,15 @@
 var DynamicLoader = klass(function(){
     this.controllerRegistry = {}; // map the controller path to the current instance
-    this.controllerLoadCallbacks = {};
+    this.classLoadCallbacks = {};
     this.currentRequestDependencies = {};
     this.dependentOn = {};
     this.pendingSetup = {};
     this.attachCallbacks = {};
-    this.controllerTypeRegistry = {}; // map controller type name to js class
+    this.typeRegistry = {}; // map controller type name to js class
     this.controllerTypeNameRegistry = {}; // map controller path to class name
 }).methods({
     initializeController: function(controllerPath, typeIdentifier){
-        if(typeIdentifier == null || typeIdentifier == undefined || this.controllerTypeRegistry[typeIdentifier]){
+        if(typeIdentifier == null || typeIdentifier == undefined || this.typeRegistry[typeIdentifier]){
             this._doAttach(controllerPath, typeIdentifier);
             return;
         }
@@ -49,53 +49,52 @@ var DynamicLoader = klass(function(){
     _doAttach: function(controllerPath, typeIdentifier){
 
     },
-    setupAndRegisterAfterDependenciesComplete: function(typeIdentifier, setupCallback){
+    processLoadNotification: function(typeIdentifier){
 
     },
+    setupAndRegisterAfterDependenciesComplete: function(typeIdentifier, setupCallback){
+        this.typeRegistry[typeIdentifier] = setupCallback();
+        delete this.pendingSetup[typeIdentifier];
+        this.processLoadNotification(typeIdentifier);
+    },
     queueClassRegister: function(typeIdentifier, dependencies, setupCallback){
-         if(dependencies == null || dependencies.length == 0) {
+        if(dependencies == null || dependencies.length == 0) {
             this.setupAndRegisterAfterDependenciesComplete(typeIdentifier, setupCallback);
             return;
         } else {
             this.currentRequestDependencies[typeIdentifier] = dependencies;
 
-            if(this.componentLoadCallbacks[componentClassID] == undefined)
-                this.componentLoadCallbacks[componentClassID] = [];
+            if(this.classLoadCallbacks[typeIdentifier] == undefined)
+                this.classLoadCallbacks[typeIdentifier] = [];
 
-            this.componentLoadCallbacks[componentClassID].push(
-                {
-                callback: function(){ // after the component is loaded, call its setup and push it into global namespace
-                   _parent.componentRegistry[componentClassID] = setupFunction();
-                   g_classRegistry[componentClassID] = _parent.componentRegistry[componentClassID];
-
-                    delete _parent.pendingSetup[componentClassID];
-                },
-                data: null
+            var _this = this;
+            this.classLoadCallbacks[typeIdentifier].push({
+                callback: function(){ // after the component is loaded, call its setup and push it into type registry
+                    _this.typeRegistry[typeIdentifier] = setupCallback();
+                    delete _this.pendingSetup[typeIdentifier];
                 }
-            );
+            });
         }
 
-        var _parent = this;
         var unloadedDependenciesCount = 0;
 
-        $.each(dependencies, function(index, value){
-            if(value == null || _parent.componentRegistry[value] != undefined) // dependency already loaded
-                return;
+        for(var dependencyIndex = 0; dependencyIndex < dependencies.length; ++dependencyIndex){
+            var dependency = dependencies[dependencyIndex];
+
+            if(dependency == null || this.typeRegistry[dependency] != undefined) // dependency already loaded
+                continue;
 
             ++unloadedDependenciesCount;
 
-            if(_parent.dependentOn[value] == undefined)
-                _parent.dependentOn[value] = [];
+            if(this.dependentOn[dependency] == undefined)
+                this.dependentOn[dependency] = [];
 
-            _parent.dependentOn[value].push(componentClassID);
-
-            _parent.retrieveComponent(value); // load each dependency
-        });
-
-        if(unloadedDependenciesCount == 0) {
-           this.setupAndRegisterAfterDependenciesComplete(componentClassID, setupFunction);
-           return;
+            this.dependentOn[dependency].push(typeIdentifier);
+            this.retrieveClass(dependency); // load each dependency
         }
+
+        if(unloadedDependenciesCount == 0)
+           this.setupAndRegisterAfterDependenciesComplete(typeIdentifier, setupCallback);
     }
 });
 

@@ -21,7 +21,7 @@ describe("DynamicLoader", function(){
         expect(dynamicLoader.controllerRegistry['page.document.two']).toBe(undefined);
     });
 
-    it("should immediately call _doAttach on initializeController if the type is undefined, null, or exists in the controllerTypeRegistry", function(){
+    it("should immediately call _doAttach on initializeController if the type is undefined, null, or exists in the typeRegistry", function(){
         var mockAttach = spyOn(dynamicLoader, '_doAttach');
         dynamicLoader.initializeController('controller.path', null);
         expect(mockAttach.mostRecentCall.args[0]).toBe('controller.path');
@@ -31,7 +31,7 @@ describe("DynamicLoader", function(){
         expect(mockAttach.mostRecentCall.args[0]).toBe('controller.path');
         expect(mockAttach.mostRecentCall.args[1]).toBe(undefined);
 
-        dynamicLoader.controllerTypeRegistry['type.identifier'] = 'the.type';
+        dynamicLoader.typeRegistry['type.identifier'] = 'the.type';
         dynamicLoader.initializeController('controller.path', 'type.identifier');
         expect(mockAttach.mostRecentCall.args[0]).toBe('controller.path');
         expect(mockAttach.mostRecentCall.args[1]).toBe('type.identifier');
@@ -63,6 +63,51 @@ describe("DynamicLoader", function(){
         var mockGetScript = spyOn($, 'getScript');
         dynamicLoader.retrieveClass('type.identifier');
         expect(mockGetScript).toHaveBeenCalledWith('/mock-static/type/identifier.js');
+    });
+
+    it("should immediately call setupAndRegisterAfterDependenciesComplete on queueClassRegister if dependencies are null or [] or ''", function(){
+        var mockSARDC = spyOn(dynamicLoader, 'setupAndRegisterAfterDependenciesComplete');
+        dynamicLoader.queueClassRegister('type.one', null, 'callback1');
+        dynamicLoader.queueClassRegister('type.two', [], 'callback2');
+        dynamicLoader.queueClassRegister('type.three', '', 'callback3');
+
+        expect(mockSARDC).toHaveBeenCalledWith('type.one', 'callback1');
+        expect(mockSARDC).toHaveBeenCalledWith('type.two', 'callback2');
+        expect(mockSARDC).toHaveBeenCalledWith('type.three', 'callback3');
+    });
+
+    it("should register currentRequestDependencies, classLoadCallbacks and dependentOn lists, and retrieve missing classes on queueClassRegister", function(){
+        var mockRetriever = spyOn(dynamicLoader, 'retrieveClass');
+        var mockSARDC = spyOn(dynamicLoader, 'setupAndRegisterAfterDependenciesComplete');
+        dynamicLoader.queueClassRegister('type.one', ['dependency1', 'dependency2'], 'callback');
+        expect(dynamicLoader.classLoadCallbacks['type.one'].length).toBe(1);
+        expect(dynamicLoader.currentRequestDependencies['type.one']).toEqual(['dependency1', 'dependency2']);
+        expect(dynamicLoader.dependentOn['dependency1']).toEqual(['type.one']);
+        expect(dynamicLoader.dependentOn['dependency2']).toEqual(['type.one']);
+        expect(mockRetriever).toHaveBeenCalledWith('dependency1');
+        expect(mockRetriever).toHaveBeenCalledWith('dependency2');
+        expect(mockSARDC).not.toHaveBeenCalled();
+    });
+
+    it("should call setupAndRegisterAfterDependenciesComplete on queueClassRegister if all dependencies are loaded", function(){
+        var mockSARDC = spyOn(dynamicLoader, 'setupAndRegisterAfterDependenciesComplete');
+        var mockRetriever = spyOn(dynamicLoader, 'retrieveClass');
+        dynamicLoader.typeRegistry = {
+            'dependency1': true,
+            'dependency2': true
+        };
+
+        dynamicLoader.queueClassRegister('type.one', ['dependency1', null, 'dependency2'], 'callback');
+        expect(mockSARDC).toHaveBeenCalledWith('type.one', 'callback');
+        expect(mockRetriever).not.toHaveBeenCalled();
+    });
+
+    it("should (on setupAndRegisterAfterDependenciesComplete) register the class (to typeRegistry) as the result of the setupCallback, then remove the ID from pending setup, and process the load", function(){
+        var mockProcessLoadNotification = spyOn(dynamicLoader, 'processLoadNotification');
+        dynamicLoader.setupAndRegisterAfterDependenciesComplete('type.identifier', function(){ return 'mockClass'});
+        expect(dynamicLoader.pendingSetup['type.identifier']).toBe(undefined);
+        expect(dynamicLoader.typeRegistry['type.identifier']).toBe('mockClass');
+        expect(mockProcessLoadNotification).toHaveBeenCalledWith('type.identifier');
     });
 });
 
