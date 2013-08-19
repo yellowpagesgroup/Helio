@@ -84,4 +84,10 @@ describe("registerClass", function(){
         registerClass('type.identifier', 'singledependency', 'callback');
         expect(mockQCR).toHaveBeenCalledWith('type.identifier', ['singledependency'], 'callback');
     });
+
+    it("should not convert a null dependency to an array", function(){
+        var mockQCR = spyOn(g_helioLoader, 'queueClassRegister');
+        registerClass('type.identifier', null, 'callback');
+        expect(mockQCR).toHaveBeenCalledWith('type.identifier', null, 'callback');
+    });
 });

@@ -49,8 +49,53 @@ var DynamicLoader = klass(function(){
     _doAttach: function(controllerPath, typeIdentifier){
 
     },
-    queueClassRegister: function(typeIdentifier, dependencies, setupCallback){
+    setupAndRegisterAfterDependenciesComplete: function(typeIdentifier, setupCallback){
 
+    },
+    queueClassRegister: function(typeIdentifier, dependencies, setupCallback){
+         if(dependencies == null || dependencies.length == 0) {
+            this.setupAndRegisterAfterDependenciesComplete(typeIdentifier, setupCallback);
+            return;
+        } else {
+            this.currentRequestDependencies[typeIdentifier] = dependencies;
+
+            if(this.componentLoadCallbacks[componentClassID] == undefined)
+                this.componentLoadCallbacks[componentClassID] = [];
+
+            this.componentLoadCallbacks[componentClassID].push(
+                {
+                callback: function(){ // after the component is loaded, call its setup and push it into global namespace
+                   _parent.componentRegistry[componentClassID] = setupFunction();
+                   g_classRegistry[componentClassID] = _parent.componentRegistry[componentClassID];
+
+                    delete _parent.pendingSetup[componentClassID];
+                },
+                data: null
+                }
+            );
+        }
+
+        var _parent = this;
+        var unloadedDependenciesCount = 0;
+
+        $.each(dependencies, function(index, value){
+            if(value == null || _parent.componentRegistry[value] != undefined) // dependency already loaded
+                return;
+
+            ++unloadedDependenciesCount;
+
+            if(_parent.dependentOn[value] == undefined)
+                _parent.dependentOn[value] = [];
+
+            _parent.dependentOn[value].push(componentClassID);
+
+            _parent.retrieveComponent(value); // load each dependency
+        });
+
+        if(unloadedDependenciesCount == 0) {
+           this.setupAndRegisterAfterDependenciesComplete(componentClassID, setupFunction);
+           return;
+        }
     }
 });
 
