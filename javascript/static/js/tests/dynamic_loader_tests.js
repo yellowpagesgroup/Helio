@@ -140,6 +140,7 @@ describe("DynamicLoader", function(){
         dynamicLoader.currentRequestDependencies = currentRequestDependencies;
 
         dynamicLoader.processLoadNotification('type.identifier');
+
         expect(mockCLC).toHaveBeenCalled();
         expect(mockAC).toHaveBeenCalled();
         expect(dynamicLoader.classLoadCallbacks['type.identifier']).toBe(undefined);
@@ -147,6 +148,26 @@ describe("DynamicLoader", function(){
         expect(dynamicLoader.dependentOn['type.identifier']).toBe(undefined);
         expect(dynamicLoader.currentRequestDependencies['dependent.class']).toBe(undefined);
         expect(processLoadNotification).toHaveBeenCalledWith('dependent.class');
+    });
+
+    it("should (on processLoadNotification) not call processLoadNotification if currentRequestDependencies is not empty for the dependent class", function(){
+         var dependentOn = {
+            'type.identifier': ['dependent.class', 'single.dependent.class']
+        };
+
+        var currentRequestDependencies = {
+            'dependent.class': ['type.identifier', 'another.class'],
+            'single.dependent.class': ['type.identifier']
+        };
+
+        var processLoadNotification = spyOn(dynamicLoader, 'processLoadNotification').andCallThrough();
+
+        dynamicLoader.dependentOn = dependentOn;
+        dynamicLoader.currentRequestDependencies = currentRequestDependencies;
+        dynamicLoader.processLoadNotification('type.identifier');
+
+        expect(processLoadNotification).toHaveBeenCalledWith('single.dependent.class');
+        expect(processLoadNotification).not.toHaveBeenCalledWith('dependent.class');
     });
 });
 
