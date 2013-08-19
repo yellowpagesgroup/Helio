@@ -1,0 +1,127 @@
+var escapeSelector = function(selector){
+    return selector.replace(/\./g, '\\.').replace(/:/g, '\\:');
+}
+
+var controllerDepthSorter = function(a, b){
+    return a.depth - b.depth;
+}
+
+var componentNameToAssetPath = function(componentName, assetType){
+    var assetPath = componentName.replace(/\./g, '/');
+    assetPath += '.' + assetType;
+    return assetPath;
+}
+
+var controllerClassMapTransform = function(controllerClassMap){
+    var newControllerClassMap = [];
+    $.each(controllerClassMap, function(controllerPath, controllerAssets) {
+        var componentDepth = controllerPath.split('.').length - 1;
+        newControllerClassMap.push({
+            depth: componentDepth,
+            path: controllerPath,
+            assets: controllerAssets
+        });
+    });
+    newControllerClassMap.sort(controllerDepthSorter);
+    return newControllerClassMap;
+}
+
+var Controller = klass(function(controllerPath, selector, extraData){
+    this.controllerPath = controllerPath;
+    if(selector == undefined)
+        selector = '#' + controllerPath;
+    this.setSelector(selector);
+    this.extraData = extraData;
+}).methods({
+    setSelector: function(selector){
+        this.containerSelector = escapeSelector(selector);
+        this.$container = $(this.containerSelector);
+    },
+    buildURL: function(){
+        var controllerBase = g_helioSettings.controller_url_base || '/controller/';
+
+        var controllerURL = controllerBase + this.controllerPath;
+        if(g_helioSettings.viewstate_id)
+            controllerURL += (controllerURL.indexOf('?') == -1 ? '?' : '&')  + 'vs_id=' + g_helioSettings.viewstate_id;
+
+        return controllerURL;
+    },
+    load: function(controllerData){
+        this.$container.data('attached', false);
+
+        if(controllerData)
+            this.loadCallback(controllerData);
+        else {
+            var _parent = this;
+
+            $.get(this.buildURL(), function(data){
+                _parent.loadCallback(data);
+            }, 'json');
+        }
+    },
+    setContent: function(content){
+        this.$container.html(content);
+    },
+    loadCallback: function(controllerData){
+        this.setContent(controllerData.html);
+
+        if(controllerData.class_map == undefined)
+            return;
+
+        g_helioLoader.removeChildrenOfController(this.controllerPath);
+
+        var sortedControllerMap = controllerClassMapTransform(controllerData.class_map);
+
+        $.each(sortedControllerMap, this._setupController);
+    },
+    _setupController: function(controllerIndex, controllerData){
+        var controllerPath = controllerData.path;
+        var controllerAssets = controllerData.assets;
+        var attached = false;
+        var controllerClassID = controllerAssets['script'];
+
+        if(controllerClassID == undefined){
+            g_helioLoader.controllerTypeNameRegistry[controllerPath] = undefined;
+
+            var controller = new Controller(controllerPath);
+            controller.attach();
+
+            g_helioLoader.controllerRegistry[controllerPath] = controller;
+
+            attached = true;
+        } else if(g_helioLoader.controllerRegistry[controllerPath] && (g_helioLoader.controllerTypeNameRegistry[controllerPath] == controllerClassID)){
+            if(!g_helioLoader.controllerRegistry[controllerPath].isAttached())
+                g_helioLoader.controllerRegistry[controllerPath].attach();
+
+            attached = true;
+        }
+
+        var componentCSS = controllerAssets['css'];
+
+        if(componentCSS != undefined && !this.cssIsAttached())
+            this.attachCSS(componentCSS);
+
+        if(!attached) {
+            g_helioLoader.controllerTypeNameRegistry[controllerPath] = controllerClassID;
+
+            g_helioLoader.attachClass(controllerClassID, componentCSS);
+        }
+    },
+    attach: function(){
+        this.$container.data('attached', true);
+    },
+    detach: function(){
+        this.$container.data('attached', false);
+    },
+    isAttached: function(){
+        return this.$container.data('attached');
+    },
+    cssIsAttached: function(){
+        return $('#css_' + escapeSelector(this.controllerPath)).length != 0;
+    },
+    attachCSS: function(componentCSS){
+        var staticBase = g_helioSettings.static_base || '/static/';
+        var cssPath = staticBase + componentNameToAssetPath(componentCSS, 'css');
+        $('head').append('<link rel="stylesheet" type="text/css" href="' + cssPath +'" id="css_' + this.controllerPath + '">');
+    }
+});
