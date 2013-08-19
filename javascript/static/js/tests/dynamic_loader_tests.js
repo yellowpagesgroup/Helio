@@ -19,5 +19,69 @@ describe("DynamicLoader", function(){
         expect(dynamicLoader.controllerRegistry['page.document-one']).toBe('pdo-controller');
         expect(dynamicLoader.controllerRegistry['page.document.one']).toBe(undefined);
         expect(dynamicLoader.controllerRegistry['page.document.two']).toBe(undefined);
-    })
+    });
+
+    it("should immediately call _doAttach on initializeController if the type is undefined, null, or exists in the controllerTypeRegistry", function(){
+        var mockAttach = spyOn(dynamicLoader, '_doAttach');
+        dynamicLoader.initializeController('controller.path', null);
+        expect(mockAttach.mostRecentCall.args[0]).toBe('controller.path');
+        expect(mockAttach.mostRecentCall.args[1]).toBe(null);
+
+        dynamicLoader.initializeController('controller.path', undefined);
+        expect(mockAttach.mostRecentCall.args[0]).toBe('controller.path');
+        expect(mockAttach.mostRecentCall.args[1]).toBe(undefined);
+
+        dynamicLoader.controllerTypeRegistry['type.identifier'] = 'the.type';
+        dynamicLoader.initializeController('controller.path', 'type.identifier');
+        expect(mockAttach.mostRecentCall.args[0]).toBe('controller.path');
+        expect(mockAttach.mostRecentCall.args[1]).toBe('type.identifier');
+
+        expect(dynamicLoader.attachCallbacks['type.identifier']).toBe(undefined);
+    });
+
+    it("should queue a callback to _doAttach with the args given if the type is not yet loaded, then attempt to retrieve the class", function(){
+        var loadData = {typeIdentifier: 'type.identifier', controllerPath: 'controller.path'};
+        dynamicLoader.retrieveClass = jasmine.createSpy();
+        dynamicLoader._doAttach = jasmine.createSpy();
+        dynamicLoader.initializeController('controller.path', 'type.identifier');
+
+        expect(dynamicLoader.attachCallbacks['type.identifier'].length).toBe(1);
+        expect(dynamicLoader.attachCallbacks['type.identifier'][0].data).toEqual(loadData);
+        expect(dynamicLoader.retrieveClass).toHaveBeenCalledWith('type.identifier');
+        dynamicLoader.attachCallbacks['type.identifier'][0].callback(loadData);
+        expect(dynamicLoader._doAttach).toHaveBeenCalledWith('controller.path', 'type.identifier');
+    });
+
+    it("should not call .getScript in retrieveClass, if the class is already queued for load", function(){
+        dynamicLoader.pendingSetup['type.identifier'] = true;
+        var mockGetScript = spyOn($, 'getScript');
+        dynamicLoader.retrieveClass('type.identifier');
+        expect(mockGetScript).not.toHaveBeenCalled();
+    });
+
+    it("should calls .getScript in retrieveClass, converting the type to a js path", function(){
+        var mockGetScript = spyOn($, 'getScript');
+        dynamicLoader.retrieveClass('type.identifier');
+        expect(mockGetScript).toHaveBeenCalledWith('/mock-static/type/identifier.js');
+    });
+});
+
+describe("registerClass", function(){
+    beforeEach(function(){
+        window.g_helioLoader = {
+            queueClassRegister: function(){}
+        };
+    });
+
+    it("should call the loader's queueClassRegister ", function(){
+        var mockQCR = spyOn(g_helioLoader, 'queueClassRegister');
+        registerClass('type.identifier', ['list', 'of', 'dependencies'], 'callback');
+        expect(mockQCR).toHaveBeenCalledWith('type.identifier', ['list', 'of', 'dependencies'], 'callback');
+    });
+
+    it("should convert a single dependency into an array, for consistency", function(){
+        var mockQCR = spyOn(g_helioLoader, 'queueClassRegister');
+        registerClass('type.identifier', 'singledependency', 'callback');
+        expect(mockQCR).toHaveBeenCalledWith('type.identifier', ['singledependency'], 'callback');
+    });
 });

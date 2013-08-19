@@ -101,8 +101,7 @@ var Controller = klass(function(controllerPath, selector, extraData){
         if(!attached) {
             this.detachCSS();
             g_helioLoader.controllerTypeNameRegistry[controllerPath] = controllerClassID;
-
-            g_helioLoader.attachClass(controllerClassID, componentCSS);
+            g_helioLoader.initializeController(controllerPath, controllerClassID);
         }
 
         var componentCSS = controllerAssets['css'];
@@ -142,7 +141,7 @@ var Controller = klass(function(controllerPath, selector, extraData){
         if(notificationArgs == 'scroll_top')
             g_helioNotificationCentre.scrollTopOnFinish = true;
 
-        if(splitNotification == 'load')
+        if(notificationName == 'load')
             this.load(data);
     }
 });

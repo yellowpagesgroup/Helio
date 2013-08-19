@@ -239,6 +239,18 @@ describe("Controller", function() {
         expect(testController.attachCSS).toHaveBeenCalled();
     });
 
+    it("should call the dynamicLoader attachClass if the controller type has changed", function(){
+        window.g_helioLoader = {
+            controllerTypeNameRegistry: {'page': 'page'},
+            controllerRegistry: {},
+            initializeController: jasmine.createSpy()
+        };
+
+        testController._setupController({path: 'not-page', assets: {'script': 'new-script'}});
+
+        expect(window.g_helioLoader.initializeController).toHaveBeenCalledWith('not-page', 'new-script');
+    });
+
     it("should escape its path before using in the CSS attached detector", function(){
         var mockJQ = spyOn(window, '$');
         mockJQ.andReturn([]);
