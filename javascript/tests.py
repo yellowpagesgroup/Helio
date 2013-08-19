@@ -9,12 +9,12 @@ def path2url(path):
 
 
 class JavascriptTestRunner(unittest.TestCase):
-    def test_run_qunit(self):
+    def test_run_controller_js_tests(self):
         return
         try:
-            output = subprocess.check_output(['phantomjs', 'javascript/runner.js',
-                                              path2url(os.getcwd() + '/javascript/qunit.html')])
-            self.assertIn(' 0 failed', output)
+            output = subprocess.check_output(['phantomjs', 'javascript/static/js/tests/jasminerunner.js',
+                                              path2url(os.getcwd() + '/javascript/controller_tests.html')])
+            self.assertIn(' 0 failures', output)
         except subprocess.CalledProcessError as e:
             raise RuntimeError(e.output)
 
