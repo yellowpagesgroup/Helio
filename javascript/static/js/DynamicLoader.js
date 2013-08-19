@@ -50,7 +50,38 @@ var DynamicLoader = klass(function(){
 
     },
     processLoadNotification: function(typeIdentifier){
+        var _this = this;
 
+        if(this.classLoadCallbacks[typeIdentifier] != undefined) {
+            $.each(this.classLoadCallbacks[typeIdentifier], function(index, value){
+                value.callback(value.data); // load the component, usually  by calling function to create class and put in global namespace
+            });
+
+            delete this.classLoadCallbacks[typeIdentifier];
+        }
+
+        if(this.attachCallbacks[typeIdentifier] != undefined) {
+            $.each(this.attachCallbacks[typeIdentifier], function(index, value){
+                value.callback(value.data); // after the component is loaded, we can attach it to the dom
+            });
+
+            delete this.attachCallbacks[typeIdentifier];
+        }
+
+        if(this.dependentOn[typeIdentifier]){
+            $.each(this.dependentOn[typeIdentifier], function(index, value){ // for each of the classes that are dependent on it, let them know it's finished
+                _this.currentRequestDependencies[value] = $.grep(_this.currentRequestDependencies[value], function(innerValue, innerIndex){
+                    return innerValue != typeIdentifier; // remove the class that has just been loaded from the list of dependencies
+                });
+
+                if(_this.currentRequestDependencies[value] != undefined && _this.currentRequestDependencies[value].length == 0){
+                    _this.processLoadNotification(value); // if the class now has no dependencies it can be loaded
+                    delete _this.currentRequestDependencies[value];
+                }
+            });
+
+            delete this.dependentOn[typeIdentifier];
+        }
     },
     setupAndRegisterAfterDependenciesComplete: function(typeIdentifier, setupCallback){
         this.typeRegistry[typeIdentifier] = setupCallback();

@@ -109,6 +109,45 @@ describe("DynamicLoader", function(){
         expect(dynamicLoader.typeRegistry['type.identifier']).toBe('mockClass');
         expect(mockProcessLoadNotification).toHaveBeenCalledWith('type.identifier');
     });
+
+    it("should (on processLoadNotification) call each classLoadCallbacks for the type, call each attachCallbacks for the type, and notify all dependent components", function(){
+        var mockCLC = jasmine.createSpy();
+        var mockAC = jasmine.createSpy();
+
+        var classLoadCallback = {
+            'data': 'mockData',
+            'callback': mockCLC
+        };
+
+        var attachCallback = {
+            'data': 'mockData',
+            'callback': mockAC
+        };
+
+        var dependentOn = {
+            'type.identifier': ['dependent.class']
+        };
+
+        var currentRequestDependencies = {
+            'dependent.class': ['type.identifier']
+        };
+
+        var processLoadNotification = spyOn(dynamicLoader, 'processLoadNotification').andCallThrough();
+
+        dynamicLoader.classLoadCallbacks = {'type.identifier': [classLoadCallback]};
+        dynamicLoader.attachCallbacks = {'type.identifier': [attachCallback]};
+        dynamicLoader.dependentOn = dependentOn;
+        dynamicLoader.currentRequestDependencies = currentRequestDependencies;
+
+        dynamicLoader.processLoadNotification('type.identifier');
+        expect(mockCLC).toHaveBeenCalled();
+        expect(mockAC).toHaveBeenCalled();
+        expect(dynamicLoader.classLoadCallbacks['type.identifier']).toBe(undefined);
+        expect(dynamicLoader.attachCallbacks['type.identifier']).toBe(undefined);
+        expect(dynamicLoader.dependentOn['type.identifier']).toBe(undefined);
+        expect(dynamicLoader.currentRequestDependencies['dependent.class']).toBe(undefined);
+        expect(processLoadNotification).toHaveBeenCalledWith('dependent.class');
+    });
 });
 
 describe("registerClass", function(){
