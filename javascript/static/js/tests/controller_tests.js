@@ -155,8 +155,8 @@ describe("Controller", function() {
         var classMap = {'page': {}, 'page.two': {'script': 'js.component', 'css': 'the.css'}};
         testController._setupController = jasmine.createSpy();
         testController.loadCallback({'class_map': classMap});
-        expect(testController._setupController.calls[0].args[1]).toEqual({ depth: 0, path: 'page', assets: {}});
-        expect(testController._setupController.calls[1].args[1]).toEqual({ depth: 1, path: 'page.two', assets: {script: 'js.component', css: 'the.css'}});
+        expect(testController._setupController.calls[0].args[0]).toEqual({ depth: 0, path: 'page', assets: {}});
+        expect(testController._setupController.calls[1].args[0]).toEqual({ depth: 1, path: 'page.two', assets: {script: 'js.component', css: 'the.css'}});
     });
 
     it("_setupController should set controllerTypeNameRegistry to undefined for an undefined class, and controllerRegistry should be a Controller instance", function(){
@@ -164,12 +164,12 @@ describe("Controller", function() {
             controllerTypeNameRegistry: {},
             controllerRegistry: {}
         };
-        testController._setupController(0, {path: 'page', assets: {}});
+        testController._setupController({path: 'page', assets: {}});
         expect(window.g_helioLoader.controllerTypeNameRegistry['page']).toBe(undefined);
         expect(window.g_helioLoader.controllerRegistry['page']).toEqual(jasmine.any(Controller));
     });
 
-    it("_setupController should call the isAttached and then attach on a controller if the typeName matches the new version", function(){
+    it("_setupController should call isAttached() and then attach() on a controller if the typeName matches the new version", function(){
         var mockAttached = {
             isAttached: jasmine.createSpy().andCallFake(function(){return true}),
             attach: jasmine.createSpy()
@@ -188,11 +188,11 @@ describe("Controller", function() {
             }
         };
 
-        testController._setupController(0, {path: 'attached', assets: {'script': 'attached'}});
+        testController._setupController({path: 'attached', assets: {'script': 'attached'}});
         expect(mockAttached.isAttached).toHaveBeenCalled();
         expect(mockAttached.attach).not.toHaveBeenCalled();
 
-        testController._setupController(0, {path: 'unattached', assets: {'script': 'unattached'}});
+        testController._setupController({path: 'unattached', assets: {'script': 'unattached'}});
         expect(mockNotAttached.isAttached).toHaveBeenCalled();
         expect(mockNotAttached.attach).toHaveBeenCalled();
 
@@ -200,15 +200,15 @@ describe("Controller", function() {
 
     it("should attach css if CSS is defined and CSS is not already attached", function(){
         var mockNoCSS = {
-            isAttached: jasmine.createSpy().andCallFake(function(){return true}),
+            isAttached: jasmine.createSpy().andCallFake(function(){return true})
         };
 
         var mockCSSAttached = {
-            isAttached: jasmine.createSpy().andCallFake(function(){return true}),
+            isAttached: jasmine.createSpy().andCallFake(function(){return true})
         };
 
         var mockCSSNotAttached = {
-            isAttached: jasmine.createSpy().andCallFake(function(){return true}),
+            isAttached: jasmine.createSpy().andCallFake(function(){return true})
         };
 
         window.g_helioLoader = {
@@ -222,19 +222,19 @@ describe("Controller", function() {
 
         testController.cssIsAttached = jasmine.createSpy();
         testController.attachCSS = jasmine.createSpy();
-        testController._setupController(0, {path: 'noCSS', assets: {'script': 'noCSS'}});
+        testController._setupController({path: 'noCSS', assets: {'script': 'noCSS'}});
         expect(testController.cssIsAttached).not.toHaveBeenCalled();
         expect(testController.attachCSS).not.toHaveBeenCalled();
 
         testController.cssIsAttached = jasmine.createSpy().andCallFake(function(){return true});
         testController.attachCSS = jasmine.createSpy();
-        testController._setupController(0, {path: 'attachedCSS', assets: {'script': 'attachedCSS', 'css': 'attachedCSS'}});
+        testController._setupController({path: 'attachedCSS', assets: {'script': 'attachedCSS', 'css': 'attachedCSS'}});
         expect(testController.cssIsAttached).toHaveBeenCalled();
         expect(testController.attachCSS).not.toHaveBeenCalled();
 
         testController.cssIsAttached = jasmine.createSpy().andCallFake(function(){return false});
         testController.attachCSS = jasmine.createSpy();
-        testController._setupController(0, {path: 'detachedCSS', assets: {'script': 'detachedCSS', 'css': 'detachedCSS'}});
+        testController._setupController({path: 'detachedCSS', assets: {'script': 'detachedCSS', 'css': 'detachedCSS'}});
         expect(testController.cssIsAttached).toHaveBeenCalled();
         expect(testController.attachCSS).toHaveBeenCalled();
     });
@@ -262,6 +262,31 @@ describe("Controller", function() {
         expect(mockAssetPathGen).toHaveBeenCalledWith('mock-asset', 'css');
         expect(mockJQ).toHaveBeenCalledWith('head');
         expect(mockJQResult.append).toHaveBeenCalledWith('<link rel="stylesheet" type="text/css" href="/mock-static/mock-assetpath" id="css_this.is.my.path">');
+    });
+
+    it("should, on detachCSS, locate the css link and remove it", function(){
+        var mockJQResult = {
+            remove: jasmine.createSpy()
+        };
+
+        var mockJQ = spyOn(window, '$').andReturn(mockJQResult);
+        var mockSelectorEscape = spyOn(window, 'escapeSelector').andReturn('mock-selector');
+        testController.detachCSS();
+        expect(mockSelectorEscape).toHaveBeenCalledWith(testController.controllerPath);
+        expect(mockJQ).toHaveBeenCalledWith('#css_mock-selector');
+        expect(mockJQResult.remove).toHaveBeenCalled();
+    });
+
+    it("should call its load() method on a load notification", function(){
+        testController.load = jasmine.createSpy();
+        testController.processNotification('load', {'some': 'data'});
+        expect(testController.load).toHaveBeenCalledWith({'some': 'data'});
+    });
+
+    it("should set the notificationCentre.scrollTopOnFinish to true if there is a scroll_top arg", function(){
+        window.g_helioNotificationCentre = {};
+        testController.processNotification('fake-call:scroll_top');
+        expect(window.g_helioNotificationCentre.scrollTopOnFinish).toBe(true);
     });
 
     it("should call its $container data() method to set attached data to true or false on attach and detach, respectively", function(){

@@ -72,15 +72,17 @@ var Controller = klass(function(controllerPath, selector, extraData){
 
         var sortedControllerMap = controllerClassMapTransform(controllerData.class_map);
 
-        $.each(sortedControllerMap, this._setupController);
+        for(var controllerIndex=0; controllerIndex < sortedControllerMap.length; ++controllerIndex)
+            this._setupController(sortedControllerMap[controllerIndex]);
     },
-    _setupController: function(controllerIndex, controllerData){
+    _setupController: function(controllerData){
         var controllerPath = controllerData.path;
         var controllerAssets = controllerData.assets;
         var attached = false;
         var controllerClassID = controllerAssets['script'];
 
         if(controllerClassID == undefined){
+            this.detachCSS();
             g_helioLoader.controllerTypeNameRegistry[controllerPath] = undefined;
 
             var controller = new Controller(controllerPath);
@@ -96,16 +98,17 @@ var Controller = klass(function(controllerPath, selector, extraData){
             attached = true;
         }
 
-        var componentCSS = controllerAssets['css'];
-
-        if(componentCSS != undefined && !this.cssIsAttached())
-            this.attachCSS(componentCSS);
-
         if(!attached) {
+            this.detachCSS();
             g_helioLoader.controllerTypeNameRegistry[controllerPath] = controllerClassID;
 
             g_helioLoader.attachClass(controllerClassID, componentCSS);
         }
+
+        var componentCSS = controllerAssets['css'];
+
+        if(componentCSS != undefined && !this.cssIsAttached())
+            this.attachCSS(componentCSS);
     },
     attach: function(){
         this.$container.data('attached', true);
@@ -123,5 +126,23 @@ var Controller = klass(function(controllerPath, selector, extraData){
         var staticBase = g_helioSettings.static_base || '/static/';
         var cssPath = staticBase + componentNameToAssetPath(componentCSS, 'css');
         $('head').append('<link rel="stylesheet" type="text/css" href="' + cssPath +'" id="css_' + this.controllerPath + '">');
+    },
+    detachCSS: function(){
+        var cssSelector = escapeSelector(this.controllerPath);
+        $('#css_' + cssSelector).remove();
+    },
+    processNotification: function(notificationName, data){
+        var splitNotification = notificationName.split(':'), notificationArgs = '';
+
+        if(splitNotification.length > 1){
+            notificationName = splitNotification[0];
+            notificationArgs = splitNotification[1];
+        }
+
+        if(notificationArgs == 'scroll_top')
+            g_helioNotificationCentre.scrollTopOnFinish = true;
+
+        if(splitNotification == 'load')
+            this.load(data);
     }
 });
