@@ -264,7 +264,7 @@ describe("Controller", function() {
         expect(mockJQResult.append).toHaveBeenCalledWith('<link rel="stylesheet" type="text/css" href="/mock-static/mock-assetpath" id="css_this.is.my.path">');
     });
 
-    it("should, on detachCSS, locate the css link and remove it", function(){
+    it("should, on detachCSS, locate the css <link> and remove it", function(){
         var mockJQResult = {
             remove: jasmine.createSpy()
         };
