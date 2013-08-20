@@ -1,6 +1,6 @@
 import unittest
 from mock import MagicMock, patch
-from viewstate import ViewState, split_and_validate_path
+from viewstate import ViewState, ViewStateManager, split_and_validate_path, get_default_viewstate
 from controller.base import BaseViewController
 
 
@@ -16,6 +16,11 @@ class TestViewStateFunctions(unittest.TestCase):
     def test_path_split(self):
         self.assertEqual(split_and_validate_path('page.test.path.one.two.three'),
                          (['page', 'test', 'path', 'one', 'two', 'three']))
+
+    def test_default_viewstate_generator(self):
+        """get_default_viewstate should return a ViewState instance."""
+        vs = get_default_viewstate()
+        self.assertIsInstance(vs, ViewState)
 
 
 class TestViewStateClass(unittest.TestCase):
@@ -106,6 +111,76 @@ class TestViewStateClass(unittest.TestCase):
     def test_page_pop_fails(self):
         """ValueError is raised when trying to pop the root (page)."""
         self.assertRaises(ValueError, self.vs.pop_controller, 'page')
+
+
+class TestViewStateManagerClass(unittest.TestCase):
+    def test_new_viewstate_generation(self):
+        """get_unlinked_view_state should generate a new viewstate when called on a new VSM."""
+        mock_viewstate = MagicMock()
+        with patch('viewstate.viewstate.get_default_viewstate', return_value=mock_viewstate) as mock_gdv:
+            vsm = ViewStateManager()
+            vs_index, new_vs = vsm.get_unlinked_view_state()
+            self.assertEqual(new_vs, mock_viewstate)
+            self.assertFalse(new_vs.linked)
+            self.assertEqual(vs_index, 0)
+
+    def test_new_viewstate_linking(self):
+        """A new viewstate should have its linked property set to True if link=True on get_unlinked_view_state."""
+        mock_viewstate = MagicMock()
+        with patch('viewstate.viewstate.get_default_viewstate', return_value=mock_viewstate) as mock_gdv:
+            vsm = ViewStateManager()
+            vs_index, new_vs = vsm.get_unlinked_view_state(link=True)
+            self.assertEqual(new_vs, mock_viewstate)
+            self.assertTrue(new_vs.linked)
+            self.assertEqual(vs_index, 0)
+
+    def test_viewstate_append_on_link(self):
+        """Every call to get_unlinked_view_state with link=True should return a viewstate index one higher than the
+        previous call."""
+        mock_viewstate = MagicMock()
+        with patch('viewstate.viewstate.get_default_viewstate', return_value=mock_viewstate) as mock_gdv:
+            vsm = ViewStateManager()
+            vs_index, new_vs = vsm.get_unlinked_view_state(link=True)
+            self.assertEqual(new_vs, mock_viewstate)
+            self.assertTrue(new_vs.linked)
+            self.assertEqual(vs_index, 0)
+            self.assertEqual(mock_gdv.call_count, 1)
+            vs_index, new_vs = vsm.get_unlinked_view_state(link=True)
+            self.assertTrue(new_vs.linked)
+            self.assertEqual(vs_index, 1)
+            self.assertEqual(mock_gdv.call_count, 2)
+            vs_index, new_vs = vsm.get_unlinked_view_state(link=True)
+            self.assertTrue(new_vs.linked)
+            self.assertEqual(vs_index, 2)
+            self.assertEqual(mock_gdv.call_count, 3)
+            self.assertEqual(len(vsm), 3)
+
+    def test_viewstate_consistent_on_no_link(self):
+        """Every call to get_unlinked_view_state should return the same viewstate if it is never linked."""
+        mock_viewstate = MagicMock()
+        with patch('viewstate.viewstate.get_default_viewstate', return_value=mock_viewstate) as mock_gdv:
+            vsm = ViewStateManager()
+            vs_index, new_vs = vsm.get_unlinked_view_state()
+            self.assertEqual(vs_index, 0)
+            vs_index, new_vs = vsm.get_unlinked_view_state()
+            self.assertEqual(vs_index, 0)
+            self.assertEqual(mock_gdv.call_count, 1)
+            self.assertEqual(len(vsm), 1)
+
+    def test_link_view_state(self):
+        """Calling 'link_view_state' should set the view state's linked property to True."""
+        vsm = ViewStateManager()
+        vsm.get_unlinked_view_state(link=True)
+        vsm.get_unlinked_view_state()
+
+        self.assertEqual(len(vsm), 2)
+        self.assertTrue(vsm[0].linked)
+        self.assertFalse(vsm[1].linked)
+
+        vsm.link_view_state(1)
+
+        self.assertTrue(vsm[0].linked)
+        self.assertTrue(vsm[1].linked)
 
 
 if __name__ == '__main__':
