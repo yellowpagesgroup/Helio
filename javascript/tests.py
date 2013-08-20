@@ -18,3 +18,13 @@ class JavascriptTestRunner(unittest.TestCase):
         except subprocess.CalledProcessError as e:
             raise RuntimeError(e.output)
 
+
+    def test_run_notification_js_tests(self):
+        return
+        try:
+            output = subprocess.check_output(['phantomjs', 'javascript/static/js/tests/jasminerunner.js',
+                                              path2url(os.getcwd() + '/javascript/controller_tests.html')])
+            self.assertIn(' 0 failures', output)
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(e.output)
+

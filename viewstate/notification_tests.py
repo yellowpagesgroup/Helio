@@ -162,3 +162,13 @@ class NotifcationCentreTests(unittest.TestCase):
         queued_notifications = [notification for notification in n]
         self.assertEqual(len(queued_notifications), 2)
         self.assertEqual(queued_notifications[0], queued_notifications[1])
+
+    def test_unsubscribe_non_existant_without_error(self):
+        """Test that unsubscribing from a notification that isn't being listened to, and from a component that hasn't
+        been subscribed to, doesn't raise an error."""
+        v = ViewState(MagicMock())
+        n = NotificationCentre(v)
+
+        n.unsubscribe_from_notification('non-existant', 'not.a.real.path')
+        n.subscribe_to_notification('real-notification', 'listener.path', 'a.real.path')
+        n.unsubscribe_from_notification('real-notification', 'listener.path', 'not.a.real.path')

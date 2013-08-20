@@ -1,7 +1,7 @@
 import unittest
 from mock import patch, MagicMock
-from controller.helpers import init_controller, import_controllers
-
+from controller.helpers import init_controller, import_controllers, get_controller_from_module_path
+from controller_exceptions import ControllerImportError
 
 class HelpersTests(unittest.TestCase):
     def test_controller_init(self):
@@ -31,3 +31,9 @@ class HelpersTests(unittest.TestCase):
             imported_controllers = import_controllers(component_one, component_two)
             self.assertIn(component_one, imported_controllers)
             self.assertIn(component_two, imported_controllers)
+
+    def test_controller_importer_failure(self):
+        """Trying to import a controller that doesn't exist should catch the ImportError and raise a
+        ControllerImportError."""
+        with self.assertRaises(ControllerImportError):
+            get_controller_from_module_path('controller.doesnt.exist')

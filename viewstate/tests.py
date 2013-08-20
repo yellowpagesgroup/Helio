@@ -71,6 +71,24 @@ class TestViewStateClass(unittest.TestCase):
             patched_init.assert_called_with('new.component.path', 'arg1', 'arg2', kwarg1='kwarg1', kwarg2='kwarg2')
             self.vs.insert_controller.assert_called_with('page.one.four', new_component)
 
+    def test_component_path_push(self):
+        """A component can be pushed onto the stack at a path."""
+        new_component = MagicMock()
+        self.child_one.push_named_child = MagicMock()
+        self.vs.push_controller('page.one.four', new_component)
+        self.child_one.push_named_child.assert_called_with('four', new_component)
+
+    def test_new_component_path_push(self):
+        """A new controller can be instantiated (based on component name) and then can be pushed directly using a view
+        path, onto the stack there."""
+        new_component = MagicMock()
+        self.vs.push_controller = MagicMock()
+        with patch('viewstate.viewstate.init_controller', return_value=new_component) as patched_init:
+            self.vs.push_new_controller('page.one.four', 'new.component.path', 'arg1', 'arg2', kwarg1='kwarg1',
+                                         kwarg2='kwarg2')
+            patched_init.assert_called_with('new.component.path', 'arg1', 'arg2', kwarg1='kwarg1', kwarg2='kwarg2')
+            self.vs.push_controller.assert_called_with('page.one.four', new_component)
+
     def test_component_path_pop(self):
         """A component can be popped from the stack by giving its path to the ViewState."""
         # tree looks like this -> page.one.two.three

@@ -66,6 +66,22 @@ class ViewState(object):
         self.insert_controller(path, controller)
         return controller
 
+    def push_controller(self, path, controller):
+        """
+        Pushes and already initialised controller onto the stack at the given path.
+        """
+        parent_controller, child_key = self._parent_controller_and_child_key_from_path(path)
+        self._add_controller_to_parent(parent_controller, controller, child_key, True)
+
+    def push_new_controller(self, path, component_name, *args, **kwargs):
+        """
+        Similar to the push_controller method, however it takes a component name
+        and arguments and will init the controller before pushing it onto the given path.
+        """
+        controller = init_controller(component_name, *args, **kwargs)
+        self.push_controller(path, controller)
+        return controller
+
     def pop_controller(self, path):
         """Pop a controller from the stack at the given path."""
         parent_controller, child_key = self._parent_controller_and_child_key_from_path(path)
