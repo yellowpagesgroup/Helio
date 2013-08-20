@@ -47,7 +47,17 @@ var DynamicLoader = klass(function(){
         $.getScript(scriptPath);
     },
     _doAttach: function(controllerPath, typeIdentifier){
+         // get the class from its identifier, then initialise, attach and store a reference to it
+        // this is only called after the JS component for the particular class is available.
+        if(typeIdentifier == null)
+            var componentClass = Controller;
+        else
+            var componentClass = this.typeRegistry[typeIdentifier];
 
+        this.controllerTypeNameRegistry = typeIdentifier;
+        var classInstance = new componentClass(controllerPath);
+        classInstance.attach();
+        this.controllerRegistry[controllerPath] = classInstance;
     },
     processLoadNotification: function(typeIdentifier){
         var _this = this;

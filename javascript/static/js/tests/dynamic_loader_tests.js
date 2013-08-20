@@ -169,6 +169,37 @@ describe("DynamicLoader", function(){
         expect(processLoadNotification).toHaveBeenCalledWith('single.dependent.class');
         expect(processLoadNotification).not.toHaveBeenCalledWith('dependent.class');
     });
+
+    it("should instantiate a new controller from the class retrieved from the type registry", function(){
+        var mockClassOne = jasmine.createSpy().andReturn({
+            attach: jasmine.createSpy()
+        });
+        var mockClassTwo = jasmine.createSpy().andReturn({
+            attach: jasmine.createSpy()
+        });
+
+        dynamicLoader.typeRegistry = {
+            'class.one': mockClassOne,
+            'class.two': mockClassTwo
+        };
+
+        dynamicLoader._doAttach('controller.path.one', 'class.one');
+        dynamicLoader._doAttach('controller.path.two', 'class.two');
+
+        expect(mockClassOne).toHaveBeenCalledWith('controller.path.one');
+        expect(mockClassTwo).toHaveBeenCalledWith('controller.path.two');
+    });
+
+    it("should create a new Controller on _doAttach if typeIdentifier is null", function(){
+        var mockAttach = jasmine.createSpy();
+        var mockController = spyOn(window, 'Controller').andReturn({
+            attach: mockAttach
+        });
+
+        dynamicLoader._doAttach('controller.path', null);
+        expect(mockAttach).toHaveBeenCalled();
+        expect(mockController).toHaveBeenCalledWith('controller.path');
+    });
 });
 
 describe("registerClass", function(){
