@@ -18,7 +18,6 @@ class JavascriptTestRunner(unittest.TestCase):
         except subprocess.CalledProcessError as e:
             raise RuntimeError(e.output)
 
-
     def test_run_notification_js_tests(self):
         return
         try:
