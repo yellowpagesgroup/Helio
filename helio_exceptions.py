@@ -5,3 +5,8 @@ class UnattachedControllerError(Exception):
 
 class ControllerImportError(Exception):
     """Raised when the specified controller could not be found in any of the component directories."""
+
+
+class ViewStateError(Exception):
+    """General ViewState exception."""
+

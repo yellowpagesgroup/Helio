@@ -47,11 +47,11 @@ class NotifcationCentreTests(unittest.TestCase):
 
         n.subscribe_to_notification('test_notification', 'page.test_component')
         n.post_notification('test_notification')
-        component.process_notification.assert_called_with('test_notification', None)
+        component.handle_notification.assert_called_with('test_notification', None)
 
         n.subscribe_to_notification('test_notification2', 'page.test_component')
         n.post_notification('test_notification2', 'page.another_component')
-        component.process_notification.assert_called_with('test_notification2', None)
+        component.handle_notification.assert_called_with('test_notification2', None)
 
     def test_specific_notification_subscription_and_receive(self):
         """A component can listen to events from only single sources, so shouldn't receive that notification if posted
@@ -64,10 +64,10 @@ class NotifcationCentreTests(unittest.TestCase):
         n.subscribe_to_notification('test_notification', 'page.test_component', 'page.source_component')
         n.post_notification('test_notification')
         n.post_notification('test_notification', 'page.another_source')
-        self.assertEqual(component.process_notification.call_count, 0)
+        self.assertEqual(component.handle_notification.call_count, 0)
 
         n.post_notification('test_notification', 'page.source_component')
-        component.process_notification.assert_called_with('test_notification', None)
+        component.handle_notification.assert_called_with('test_notification', None)
 
     def test_missing_component_no_exception(self):
         """If a component no longer exists at the path to receive the notification, no error should occur."""
@@ -95,9 +95,9 @@ class NotifcationCentreTests(unittest.TestCase):
         n.subscribe_to_notification('test_notification2', 'page.test_component')
         n.unsubscribe_from_notification('test_notification', 'page.test_component')
         n.post_notification('test_notification')
-        self.assertEqual(component.process_notification.call_count, 0)
+        self.assertEqual(component.handle_notification.call_count, 0)
         n.post_notification('test_notification2')
-        component.process_notification.assert_called_with('test_notification2', None)
+        component.handle_notification.assert_called_with('test_notification2', None)
 
     def test_notification_unsubscribe_all(self):
         """nc.unsubscribe_from_all_notifications should prevent any more calls going to the component."""
@@ -111,7 +111,7 @@ class NotifcationCentreTests(unittest.TestCase):
         n.unsubscribe_from_all_notifications('page.test_component')
         n.post_notification('test_notification')
         n.post_notification('test_notification2')
-        self.assertEqual(component.process_notification.call_count, 0)
+        self.assertEqual(component.handle_notification.call_count, 0)
 
     def test_client_notification_queue_and_retrieve(self):
         """Client notifications are queued and retrieved in FIFO order."""

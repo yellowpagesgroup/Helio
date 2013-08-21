@@ -1,4 +1,4 @@
-from controller_exceptions import ControllerImportError
+from helio_exceptions import ControllerImportError
 from settings import COMPONENT_DIRECTORIES
 
 

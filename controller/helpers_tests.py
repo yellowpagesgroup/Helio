@@ -1,7 +1,8 @@
 import unittest
 from mock import patch, MagicMock
 from controller.helpers import init_controller, import_controllers, get_controller_from_module_path
-from controller_exceptions import ControllerImportError
+from helio_exceptions import ControllerImportError
+
 
 class HelpersTests(unittest.TestCase):
     def test_controller_init(self):

@@ -1,5 +1,6 @@
 from controller.helpers import init_controller
 from controller.base import BaseViewController
+from helio_exceptions import ViewStateError
 
 
 def split_and_validate_path(path):
@@ -93,29 +94,18 @@ class ViewStateManager(object):
     def __init__(self):
         self._state_store = []
 
-    def __len__(self):
-        return len(self._state_store)
-
-    def __getitem__(self, key):
-        return self._state_store[key]
-
-    def get_unlinked_view_state(self, link=False):
-        view_state = None
-        for vs_index, _vs in enumerate(self._state_store):
-            if not _vs.linked:
-                view_state = _vs
-                break
-        if view_state is None:
+    def get_view_state(self, index, no_create=False):
+        try:
+            view_state = self._state_store[index]
+        except (IndexError, TypeError):
+            if no_create:
+                raise ViewStateError("ViewState does not exist at index %s" % index)
             view_state = get_default_viewstate()
             self._state_store.append(view_state)
-            vs_index = len(self._state_store) - 1
+            view_state.index = len(self._state_store) - 1
 
-        view_state.linked = link
-        return vs_index, view_state
+        return view_state
 
-    def link_view_state(self, vs_index):
-        view_state = self._state_store[vs_index]
-        view_state.linked = True
 
 
 def get_default_viewstate():

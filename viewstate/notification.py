@@ -43,7 +43,7 @@ class NotificationCentre(object):
             if component is None:
                 continue
 
-            component.process_notification(notification_name, data)
+            component.handle_notification(notification_name, data)
 
     def unsubscribe_from_notification(self, notification_name, component_path, source_component_path='__global__'):
         if not notification_name in self._notification_listeners:
@@ -94,6 +94,3 @@ class NotificationCentre(object):
 
     def __iter__(self):
         return self._client_notification_iterator()
-
-
-

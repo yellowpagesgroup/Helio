@@ -2,6 +2,7 @@ import unittest
 from mock import MagicMock, patch
 from viewstate import ViewState, ViewStateManager, split_and_validate_path, get_default_viewstate
 from controller.base import BaseViewController
+from helio_exceptions import ViewStateError
 
 
 class TestViewStateFunctions(unittest.TestCase):
@@ -114,73 +115,44 @@ class TestViewStateClass(unittest.TestCase):
 
 
 class TestViewStateManagerClass(unittest.TestCase):
-    def test_new_viewstate_generation(self):
-        """get_unlinked_view_state should generate a new viewstate when called on a new VSM."""
-        mock_viewstate = MagicMock()
-        with patch('viewstate.viewstate.get_default_viewstate', return_value=mock_viewstate) as mock_gdv:
-            vsm = ViewStateManager()
-            vs_index, new_vs = vsm.get_unlinked_view_state()
-            self.assertEqual(new_vs, mock_viewstate)
-            self.assertFalse(new_vs.linked)
-            self.assertEqual(vs_index, 0)
+    def setUp(self):
+        self.vsm = ViewStateManager()
 
-    def test_new_viewstate_linking(self):
-        """A new viewstate should have its linked property set to True if link=True on get_unlinked_view_state."""
-        mock_viewstate = MagicMock()
-        with patch('viewstate.viewstate.get_default_viewstate', return_value=mock_viewstate) as mock_gdv:
-            vsm = ViewStateManager()
-            vs_index, new_vs = vsm.get_unlinked_view_state(link=True)
-            self.assertEqual(new_vs, mock_viewstate)
-            self.assertTrue(new_vs.linked)
-            self.assertEqual(vs_index, 0)
+    def test_viewstate_creation_on_empty(self):
+        """Get VS with None id (when no viewstates exist) should create a VS and return it and its index."""
+        vs = self.vsm.get_view_state(None)
+        self.assertEqual(vs.index, 0)
+        self.assertIsInstance(vs, ViewState)
 
-    def test_viewstate_append_on_link(self):
-        """Every call to get_unlinked_view_state with link=True should return a viewstate index one higher than the
-        previous call."""
-        mock_viewstate = MagicMock()
-        with patch('viewstate.viewstate.get_default_viewstate', return_value=mock_viewstate) as mock_gdv:
-            vsm = ViewStateManager()
-            vs_index, new_vs = vsm.get_unlinked_view_state(link=True)
-            self.assertEqual(new_vs, mock_viewstate)
-            self.assertTrue(new_vs.linked)
-            self.assertEqual(vs_index, 0)
-            self.assertEqual(mock_gdv.call_count, 1)
-            vs_index, new_vs = vsm.get_unlinked_view_state(link=True)
-            self.assertTrue(new_vs.linked)
-            self.assertEqual(vs_index, 1)
-            self.assertEqual(mock_gdv.call_count, 2)
-            vs_index, new_vs = vsm.get_unlinked_view_state(link=True)
-            self.assertTrue(new_vs.linked)
-            self.assertEqual(vs_index, 2)
-            self.assertEqual(mock_gdv.call_count, 3)
-            self.assertEqual(len(vsm), 3)
+    def test_viewstate_retrieval(self):
+        """Get VS with an index that exists should return the VS at that index."""
+        vs1 = self.vsm.get_view_state(None)
+        vs2 = self.vsm.get_view_state(0)
+        self.assertEqual(vs1.index, 0)
+        self.assertEqual(vs1, vs2)
 
-    def test_viewstate_consistent_on_no_link(self):
-        """Every call to get_unlinked_view_state should return the same viewstate if it is never linked."""
-        mock_viewstate = MagicMock()
-        with patch('viewstate.viewstate.get_default_viewstate', return_value=mock_viewstate) as mock_gdv:
-            vsm = ViewStateManager()
-            vs_index, new_vs = vsm.get_unlinked_view_state()
-            self.assertEqual(vs_index, 0)
-            vs_index, new_vs = vsm.get_unlinked_view_state()
-            self.assertEqual(vs_index, 0)
-            self.assertEqual(mock_gdv.call_count, 1)
-            self.assertEqual(len(vsm), 1)
+    def test_viewstate_unexpected_creation(self):
+        """Retrieving a viewstate outside the VS range should create a new VS and return it and its index."""
+        vs1 = self.vsm.get_view_state(None)
+        vs2 = self.vsm.get_view_state(3)
 
-    def test_link_view_state(self):
-        """Calling 'link_view_state' should set the view state's linked property to True."""
-        vsm = ViewStateManager()
-        vsm.get_unlinked_view_state(link=True)
-        vsm.get_unlinked_view_state()
+        self.assertEqual(vs1.index, 0)
+        self.assertEqual(vs2.index, 1)
+        self.assertNotEqual(vs1, vs2)
 
-        self.assertEqual(len(vsm), 2)
-        self.assertTrue(vsm[0].linked)
-        self.assertFalse(vsm[1].linked)
+    def test_viewstate_creation(self):
+        """Get VS with None id should create a VS and return it and its index."""
+        vs1 = self.vsm.get_view_state(None)
+        vs2 = self.vsm.get_view_state(None)
+        self.assertNotEqual(vs1, vs2)
 
-        vsm.link_view_state(1)
+    def test_viewstate_creation_no_create(self):
+        """Get VS with invalid id should raise ViewStateError if no_create is True."""
+        with self.assertRaises(ViewStateError):
+            self.vsm.get_view_state(None, no_create=True)
 
-        self.assertTrue(vsm[0].linked)
-        self.assertTrue(vsm[1].linked)
+        with self.assertRaises(ViewStateError):
+            self.vsm.get_view_state(5, no_create=True)
 
 
 if __name__ == '__main__':

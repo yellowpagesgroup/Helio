@@ -1,4 +1,4 @@
-from controller_exceptions import UnattachedControllerError
+from helio_exceptions import UnattachedControllerError
 
 
 class BaseViewController(object):
@@ -114,10 +114,10 @@ class BaseViewController(object):
 
         return asset_map
 
-    def asset_map_tree(self, current_tree):
+    def class_map_tree(self, current_tree):
         for child_controller_stack in self._named_children.itervalues():
             if len(child_controller_stack):
-                child_controller_stack[-1].asset_map_tree(current_tree)
+                child_controller_stack[-1].class_map_tree(current_tree)
 
         current_tree[self.path] = self.asset_map()
 

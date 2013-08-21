@@ -1,7 +1,7 @@
 import unittest
 from mock import MagicMock
 from base import BaseViewController
-from controller_exceptions import UnattachedControllerError
+from helio_exceptions import UnattachedControllerError
 from viewstate.viewstate import ViewState
 
 
@@ -168,8 +168,8 @@ class TestBaseControllerFunctions(unittest.TestCase):
         asset_map = self.root.asset_map()
         self.assertEqual(asset_map, {'css': 'css.id'})
 
-    def test_asset_map_tree(self):
-        """asset_map_tree generates a dictionary mapping the paths of every controller down the tree from the starting
+    def test_class_map_tree(self):
+        """class_map_tree generates a dictionary mapping the paths of every controller down the tree from the starting
         point to the controller's asset_map."""
         child_one = BaseViewController()
         child_one.asset_map = MagicMock(return_value='asset_one')
@@ -188,7 +188,7 @@ class TestBaseControllerFunctions(unittest.TestCase):
         self.root.set_named_child('three', child_three)
         child_three.set_named_child('four', child_three_four)
 
-        asset_map_tree = self.root.asset_map_tree({})
+        asset_map_tree = self.root.class_map_tree({})
 
         self.assertIn('page.one', asset_map_tree)
         self.assertIn('page.one.two', asset_map_tree)
