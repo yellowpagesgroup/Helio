@@ -120,6 +120,85 @@ class TestBaseControllerFunctions(unittest.TestCase):
         child2.post_detach.assert_called_with()
         self.assertEqual(self.root.get_named_child('child-key'), child1)
 
+    def test_js_id_generation(self):
+        """A class' js_id should be None if has_js=False, otherwise it should be js_id property (if set) then
+        component_name."""
+        self.root.component_name = 'base.component'
+        self.root.has_js = False
+        self.assertIsNone(self.root.js_id)
+
+        self.root.has_js = True
+        self.assertEqual(self.root.js_id, 'base.component')
+
+        self.root.js_id = 'javascript.id'
+        self.assertEqual(self.root.js_id, 'javascript.id')
+
+    def test_css_id_generation(self):
+        """A class' css_id should be None if has_css=False, otherwise it should be css_id property (if set) then
+        component_name."""
+        self.root.component_name = 'base.component'
+        self.root.has_css = False
+        self.assertIsNone(self.root.css_id)
+
+        self.root.has_css = True
+        self.assertEqual(self.root.css_id, 'base.component')
+
+        self.root.css_id = 'css.id'
+        self.assertEqual(self.root.css_id, 'css.id')
+
+    def test_empty_asset_map(self):
+        """A controller should generate an empty asset map if has_js is False and has_css is False."""
+        self.root.has_js = False
+        self.root.has_css = False
+
+        asset_map = self.root.asset_map()
+        self.assertEqual(asset_map, {})
+
+    def test_asset_map_with_js(self):
+        """A controller should generate an asset_map with 'script' key to its js_id."""
+        self.root.js_id = 'script.id'
+        self.root.has_css = False
+        asset_map = self.root.asset_map()
+        self.assertEqual(asset_map, {'script': 'script.id'})
+
+    def test_asset_map_with_css(self):
+        """A controller should generate an asset_map with 'css' key to its css_id."""
+        self.root.css_id = 'css.id'
+        self.root.has_js = False
+        asset_map = self.root.asset_map()
+        self.assertEqual(asset_map, {'css': 'css.id'})
+
+    def test_asset_map_tree(self):
+        """asset_map_tree generates a dictionary mapping the paths of every controller down the tree from the starting
+        point to the controller's asset_map."""
+        child_one = BaseViewController()
+        child_one.asset_map = MagicMock(return_value='asset_one')
+
+        child_one_two = BaseViewController()
+        child_one_two.asset_map = MagicMock(return_value='asset_one_two')
+
+        child_three = BaseViewController()
+        child_three.asset_map = MagicMock(return_value='asset_three')
+
+        child_three_four = BaseViewController()
+        child_three_four.asset_map = MagicMock(return_value='asset_three_four')
+
+        self.root.set_named_child('one', child_one)
+        child_one.set_named_child('two', child_one_two)
+        self.root.set_named_child('three', child_three)
+        child_three.set_named_child('four', child_three_four)
+
+        asset_map_tree = self.root.asset_map_tree({})
+
+        self.assertIn('page.one', asset_map_tree)
+        self.assertIn('page.one.two', asset_map_tree)
+        self.assertIn('page.three', asset_map_tree)
+        self.assertIn('page.three.four', asset_map_tree)
+
+        self.assertEqual(asset_map_tree['page.one'], 'asset_one')
+        self.assertEqual(asset_map_tree['page.one.two'], 'asset_one_two')
+        self.assertEqual(asset_map_tree['page.three'], 'asset_three')
+        self.assertEqual(asset_map_tree['page.three.four'], 'asset_three_four')
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 from controller.helpers import init_controller
 from controller.base import BaseViewController
 
+
 def split_and_validate_path(path):
     split_path = path.split('.')
 

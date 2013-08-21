@@ -2,6 +2,12 @@ from controller_exceptions import UnattachedControllerError
 
 
 class BaseViewController(object):
+    component_name = None
+    has_js = False
+    _js_id = None
+    has_css = False
+    _css_id = None
+
     def __init__(self):
         self._named_children = {}
         self._indexed_children = []
@@ -95,6 +101,49 @@ class BaseViewController(object):
     def _post_detach(self):
         self.parent = None
         self.post_detach()
+
+    # asset name and map generation
+
+    def asset_map(self):
+        asset_map = {}
+        if self.js_id:
+            asset_map['script'] = self.js_id
+
+        if self.css_id:
+            asset_map['css'] = self.css_id
+
+        return asset_map
+
+    def asset_map_tree(self, current_tree):
+        for child_controller_stack in self._named_children.itervalues():
+            if len(child_controller_stack):
+                child_controller_stack[-1].asset_map_tree(current_tree)
+
+        current_tree[self.path] = self.asset_map()
+
+        return current_tree
+
+    @property
+    def js_id(self):
+        if self._js_id:
+            return self._js_id
+
+        return self.component_name if self.has_js else None
+
+    @js_id.setter
+    def js_id(self, val):
+        self._js_id = val
+
+    @property
+    def css_id(self):
+        if self._css_id:
+            return self._css_id
+
+        return self.component_name if self.has_css else None
+
+    @css_id.setter
+    def css_id(self, val):
+        self._css_id = val
 
     # Controllers should override the following methods, as appropriate
 
