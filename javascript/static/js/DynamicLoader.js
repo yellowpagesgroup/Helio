@@ -7,6 +7,7 @@ var DynamicLoader = klass(function(){
     this.attachCallbacks = {};
     this.typeRegistry = {}; // map controller type name to js class
     this.controllerTypeNameRegistry = {}; // map controller path to class name
+    this.postViewStateSetup = null // call this after the viewstate ID is retrieved
 }).methods({
     initializeController: function(controllerPath, typeIdentifier){
         if(typeIdentifier == null || typeIdentifier == undefined || this.typeRegistry[typeIdentifier]){
@@ -136,8 +137,29 @@ var DynamicLoader = klass(function(){
 
         if(unloadedDependenciesCount == 0)
            this.setupAndRegisterAfterDependenciesComplete(typeIdentifier, setupCallback);
+    },
+    getViewState: function(){
+        var viewStatePath = g_helioSettings.view_state_path || '/get-view-state/';
+
+        var currentVSID = (g_helioSettings.viewstate_id == undefined || g_helioSettings.viewstate_id == null) ? '-1' : g_helioSettings.viewstate_id;
+
+        var viewStateURL = viewStatePath + (viewStatePath.indexOf('?') >= 0 ? '&' : '?') + 'vs_id=' + currentVSID;
+
+        var _this = this;
+        $.get(viewStateURL, function(data){
+            setViewStateID(data);
+            if(_this.postViewStateSetup)
+                _this.postViewStateSetup();
+        });
     }
 });
+
+var setViewStateID = function(viewStateID){
+    g_helioSettings.viewstate_id = viewStateID;
+    if(typeof(Storage)!=="undefined"){
+        sessionStorage.helioViewStateID = viewStateID;
+    }
+}
 
 var registerClass = function(typeIdentifer, dependencies, setupCallback){
     if(typeof(dependencies) == 'string')
@@ -145,3 +167,4 @@ var registerClass = function(typeIdentifer, dependencies, setupCallback){
 
     g_helioLoader.queueClassRegister(typeIdentifer, dependencies, setupCallback);
 }
+

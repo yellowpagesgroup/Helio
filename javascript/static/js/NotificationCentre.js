@@ -87,6 +87,7 @@ var NotificationCentre = klass(function(){
     delegateNotification: function(target, notificationName, data){
         if(notificationName == 'update-vs-id'){
             g_helioSettings.viewstate_id = data;
+            sessionStorage.helioViewStateID = data;
             this.notificationComplete();
             return;
         } else if(notificationName == 'change-url') {

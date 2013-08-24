@@ -200,6 +200,19 @@ describe("DynamicLoader", function(){
         expect(mockAttach).toHaveBeenCalled();
         expect(mockController).toHaveBeenCalledWith('controller.path');
     });
+
+    it("should use the view_state_path setting to get the view state ID, otherwise use 'get-view-state", function(){
+        window.g_helioSettings = {};
+        var mockGet = spyOn($, 'get');
+
+        dynamicLoader.getViewState();
+        expect(mockGet).toHaveBeenCalledWith('/get-view-state/?vs_id=-1', jasmine.any(Function));
+
+        window.g_helioSettings['view_state_path'] = '?mock-vs-url';
+        window.g_helioSettings['viewstate_id'] = '2'
+        dynamicLoader.getViewState();
+        expect(mockGet).toHaveBeenCalledWith('?mock-vs-url&vs_id=2', jasmine.any(Function));
+    });
 });
 
 describe("registerClass", function(){
@@ -225,5 +238,15 @@ describe("registerClass", function(){
         var mockQCR = spyOn(g_helioLoader, 'queueClassRegister');
         registerClass('type.identifier', null, 'callback');
         expect(mockQCR).toHaveBeenCalledWith('type.identifier', null, 'callback');
+    });
+});
+
+describe("setViewStateID", function(){
+    it("should set view state ID into the Helio settings and the session storage", function(){
+        window.g_helioSettings = {};
+
+        setViewStateID('mock-vs-id');
+        expect(window.g_helioSettings['viewstate_id']).toBe('mock-vs-id');
+        expect(sessionStorage.helioViewStateID).toBe('mock-vs-id');
     });
 });
