@@ -154,6 +154,16 @@ class TestViewStateManagerClass(unittest.TestCase):
         with self.assertRaises(ViewStateError):
             self.vsm.get_view_state(5, no_create=True)
 
+    def test_negative_index_creation(self):
+        """If the negative VS index is given, a new VS should be created (rather than using using it as a reverse
+        index)."""
+        vs = self.vsm.get_view_state(-1)
+        self.assertEqual(vs.index, 0)
+        vs = self.vsm.get_view_state(-1)
+        self.assertEqual(vs.index, 1)
+        vs = self.vsm.get_view_state(-2)
+        self.assertEqual(vs.index, 2)
+
 
 if __name__ == '__main__':
     unittest.main()

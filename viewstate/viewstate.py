@@ -95,6 +95,8 @@ class ViewStateManager(object):
         self._state_store = []
 
     def get_view_state(self, index, no_create=False):
+        index = None if index < 0 else index
+
         try:
             view_state = self._state_store[index]
         except (IndexError, TypeError):

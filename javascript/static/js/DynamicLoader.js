@@ -140,9 +140,7 @@ var DynamicLoader = klass(function(){
     },
     getViewState: function(){
         var viewStatePath = g_helioSettings.view_state_path || '/get-view-state/';
-
         var currentVSID = (g_helioSettings.viewstate_id == undefined || g_helioSettings.viewstate_id == null) ? '-1' : g_helioSettings.viewstate_id;
-
         var viewStateURL = viewStatePath + (viewStatePath.indexOf('?') >= 0 ? '&' : '?') + 'vs_id=' + currentVSID;
 
         var _this = this;
@@ -156,8 +154,8 @@ var DynamicLoader = klass(function(){
 
 var setViewStateID = function(viewStateID){
     g_helioSettings.viewstate_id = viewStateID;
-    if(typeof(Storage)!=="undefined"){
-        sessionStorage.helioViewStateID = viewStateID;
+    if(typeof(sessionStorage)!=="undefined"){
+        sessionStorage.setItem('helioViewStateID', viewStateID);
     }
 }
 

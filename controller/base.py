@@ -145,6 +145,12 @@ class BaseViewController(object):
     def css_id(self, val):
         self._css_id = val
 
+    def render(self, request=None):
+        count = getattr(self, 'count', 0)
+        count += 1
+        self.count = count
+        return 'Hello world! %d' % count
+
     # Controllers should override the following methods, as appropriate
 
     def post_attach(self):

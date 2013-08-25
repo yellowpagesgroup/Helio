@@ -1,10 +1,14 @@
 var helioSetup = function(){
-    window.g_helioLoader = DynamicLoader();
-    window.g_helioNotificationCentre = NotificationCentre();
+    window.g_helioLoader = new DynamicLoader();
+    window.g_helioNotificationCentre = new NotificationCentre();
     window.g_helioSettings = {};
 
+    if(typeof(sessionStorage)!=="undefined"){
+        window.g_helioLoader.viewstate_id = sessionStorage.getItem('helioViewStateID');
+    }
+
     g_helioLoader.postViewStateSetup = function(){
-        var page = new DynamicLoader('page', 'body');
+        var page = new Controller('page', 'body');
         page.load();
     };
 
