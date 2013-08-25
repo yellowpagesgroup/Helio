@@ -1,14 +1,14 @@
 import unittest
 from mock import patch, MagicMock
-from controller.helpers import init_controller, import_controllers, get_controller_from_module_path
-from helio_exceptions import ControllerImportError
+from helpers import init_controller, import_controllers, get_controller_from_module_path
+from helio.helio_exceptions import ControllerImportError
 
 
 class HelpersTests(unittest.TestCase):
     def test_controller_init(self):
         """init_controller function imports then instantiates a component by its module path."""
         mock_controller_class = MagicMock()
-        with patch('controller.helpers.import_controllers', return_value=mock_controller_class) as \
+        with patch('helio.controller.helpers.import_controllers', return_value=mock_controller_class) as \
                 mock_import_controllers:
             init_controller('test.component.path', 'arg', kwarg='kwarg')
             mock_import_controllers.assert_called_with('test.component.path')

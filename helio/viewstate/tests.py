@@ -1,8 +1,8 @@
 import unittest
 from mock import MagicMock, patch
 from viewstate import ViewState, ViewStateManager, split_and_validate_path, get_default_viewstate
-from controller.base import BaseViewController
-from helio_exceptions import ViewStateError
+from helio.controller.base import BaseViewController
+from helio.helio_exceptions import ViewStateError
 
 
 class TestViewStateFunctions(unittest.TestCase):
@@ -71,7 +71,7 @@ class TestViewStateClass(unittest.TestCase):
         path, replacing the existing stack there."""
         new_component = MagicMock()
         self.vs.insert_controller = MagicMock()
-        with patch('viewstate.viewstate.init_controller', return_value=new_component) as patched_init:
+        with patch('helio.viewstate.viewstate.init_controller', return_value=new_component) as patched_init:
             self.vs.insert_new_controller('page.one.four', 'new.component.path', 'arg1', 'arg2', kwarg1='kwarg1',
                                          kwarg2='kwarg2')
             patched_init.assert_called_with('new.component.path', 'arg1', 'arg2', kwarg1='kwarg1', kwarg2='kwarg2')
@@ -89,7 +89,7 @@ class TestViewStateClass(unittest.TestCase):
         path, onto the stack there."""
         new_component = MagicMock()
         self.vs.push_controller = MagicMock()
-        with patch('viewstate.viewstate.init_controller', return_value=new_component) as patched_init:
+        with patch('helio.viewstate.viewstate.init_controller', return_value=new_component) as patched_init:
             self.vs.push_new_controller('page.one.four', 'new.component.path', 'arg1', 'arg2', kwarg1='kwarg1',
                                          kwarg2='kwarg2')
             patched_init.assert_called_with('new.component.path', 'arg1', 'arg2', kwarg1='kwarg1', kwarg2='kwarg2')

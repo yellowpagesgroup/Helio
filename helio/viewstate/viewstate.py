@@ -1,6 +1,6 @@
-from controller.helpers import init_controller
-from controller.base import BaseViewController
-from helio_exceptions import ViewStateError
+from helio.controller.helpers import init_controller
+from helio.controller.base import BaseViewController
+from helio.helio_exceptions import ViewStateError
 
 
 def split_and_validate_path(path):

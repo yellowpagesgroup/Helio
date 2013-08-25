@@ -1,4 +1,4 @@
-from helio_exceptions import UnattachedControllerError
+from helio.helio_exceptions import UnattachedControllerError
 
 
 class BaseViewController(object):

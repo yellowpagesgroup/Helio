@@ -1,5 +1,5 @@
-from helio_exceptions import ControllerImportError
-from settings import COMPONENT_DIRECTORIES
+from helio.helio_exceptions import ControllerImportError
+from helio.settings import COMPONENT_DIRECTORIES
 
 
 def get_controller_from_module_path(module_name):

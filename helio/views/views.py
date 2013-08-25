@@ -1,5 +1,5 @@
-from viewstate.viewstate import ViewStateManager
-from settings import VIEWSTATE_MANAGER_SESSION_KEY
+from helio.viewstate.viewstate import ViewStateManager
+from helio.settings import VIEWSTATE_MANAGER_SESSION_KEY
 
 
 def _get_controller_and_view_state_from_session(path, vs_id, session):

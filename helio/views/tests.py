@@ -1,7 +1,7 @@
 import unittest
 from mock import MagicMock, patch
 from views import get_view_state, get_controller_data, dispatch_notification
-from settings import VIEWSTATE_MANAGER_SESSION_KEY
+from helio.settings import VIEWSTATE_MANAGER_SESSION_KEY
 
 
 class GetViewStateTests(unittest.TestCase):

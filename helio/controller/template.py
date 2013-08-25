@@ -1,5 +1,5 @@
 import os.path
-from settings import COMPONENT_DIRECTORIES
+from helio.settings import COMPONENT_DIRECTORIES
 
 
 class Singleton(object):

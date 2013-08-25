@@ -1,8 +1,8 @@
 import unittest
 from mock import MagicMock
 from base import BaseViewController
-from helio_exceptions import UnattachedControllerError
-from viewstate.viewstate import ViewState
+from helio.helio_exceptions import UnattachedControllerError
+from helio.viewstate.viewstate import ViewState
 
 
 class TestBaseControllerFunctions(unittest.TestCase):
