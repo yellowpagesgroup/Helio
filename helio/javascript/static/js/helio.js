@@ -4,7 +4,7 @@ var helioSetup = function(){
     window.g_helioSettings = {};
 
     if(typeof(sessionStorage)!=="undefined"){
-        window.g_helioLoader.viewstate_id = sessionStorage.getItem('helioViewStateID');
+        window.g_helioSettings.viewstate_id = sessionStorage.getItem('helioViewStateID');
     }
 
     g_helioLoader.postViewStateSetup = function(){
