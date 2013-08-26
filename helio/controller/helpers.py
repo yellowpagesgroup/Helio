@@ -1,9 +1,9 @@
 from helio.helio_exceptions import ControllerImportError
-from helio.settings import COMPONENT_DIRECTORIES
+from helio.settings import COMPONENT_BASE_DIRECTORIES
 
 
 def get_controller_from_module_path(module_name):
-    for path in COMPONENT_DIRECTORIES:
+    for path in COMPONENT_BASE_DIRECTORIES:
         mod = None
 
         module_final = module_name.split('.')[-1]
@@ -21,7 +21,7 @@ def get_controller_from_module_path(module_name):
         raise ControllerImportError(
             "Can't import '%s' controller. Searched in the following directories: %s" % (
                 module_name,
-                ", ".join(COMPONENT_DIRECTORIES),
+                ", ".join(COMPONENT_BASE_DIRECTORIES),
             )
         )
 

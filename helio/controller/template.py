@@ -1,5 +1,5 @@
 import os.path
-from helio.settings import COMPONENT_DIRECTORIES
+from helio.settings import COMPONENT_BASE_DIRECTORIES
 
 
 class Singleton(object):
@@ -14,7 +14,7 @@ class Singleton(object):
 
 class BaseTemplateLoader(Singleton):
     def __init__(self):
-        self.base_dirs = COMPONENT_DIRECTORIES
+        self.base_dirs = COMPONENT_BASE_DIRECTORIES
 
     def file_path_for_template(self, template_name, has_extension=True):
         split_template_name = template_name.split('.')
