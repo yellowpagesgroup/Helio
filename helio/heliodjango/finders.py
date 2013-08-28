@@ -66,12 +66,10 @@ class ComponentStaticFinder(BaseFinder):
 
                     full_static_path = join(dir_root, static_file)
 
-                    storage = FileSystemStorage(location=dir_root)
-
                     res = re.search(r'/(.*)/static', full_static_path)
-
                     if res is None:
                         continue
 
+                    storage = FileSystemStorage(location=dir_root)
                     storage.prefix = res.group(1)
                     yield (static_file, storage)
