@@ -1,8 +1,9 @@
 import re
 from os import walk
-from os.path import join, exists, basename
+from os.path import join, exists, basename, splitext
 from django.core.files.storage import FileSystemStorage
 from django.contrib.staticfiles.finders import BaseFinder
+from django.template.loaders.filesystem import Loader
 from helio.settings import COMPONENT_BASE_DIRECTORIES
 
 
@@ -21,8 +22,8 @@ def should_ignore_file(static_file, ignore_patterns):
 
 
 class ComponentStaticFinder(BaseFinder):
-    def __init__(self, component_base_directories=None):
-        self.component_base_directories = component_base_directories or COMPONENT_BASE_DIRECTORIES
+    def __init__(self,):
+        self.component_base_directories = COMPONENT_BASE_DIRECTORIES
 
     def find(self, path, all=False):
         split_path = path.split('/')
@@ -73,3 +74,25 @@ class ComponentStaticFinder(BaseFinder):
                     storage = FileSystemStorage(location=dir_root)
                     storage.prefix = res.group(1)
                     yield (static_file, storage)
+
+
+class ComponentTemplateLoader(Loader):
+    is_usable = True
+
+    def __init__(self):
+        self.component_base_directories = COMPONENT_BASE_DIRECTORIES
+
+    def get_template_sources(self, template_name, template_dirs=None):
+        split_template_name = template_name.split('/')
+
+        if len(split_template_name) == 1:
+            component_name, ext = splitext(split_template_name[-1])
+            final_template_name = component_name.split('.')[-1] + ext
+        else:
+            component_name = split_template_name[0]
+            final_template_name = '/'.join(split_template_name[1:])
+
+        component_dir = component_name.replace('.', '/')
+
+        for component_base_dir in self.component_base_directories:
+            yield join(component_base_dir, component_dir, final_template_name)

@@ -1,23 +1,14 @@
 import unittest
 from mock import patch
 from django.conf import settings
-import helio.settings
 settings.configure()
-
-helio.settings.COMPONENT_BASE_DIRECTORIES = ('SETTINGS_BASE',)
-from finders import ComponentStaticFinder, walk_component_base_dir
+from finders import ComponentStaticFinder, ComponentTemplateLoader, walk_component_base_dir
 
 
-class StaticFindersTests(unittest.TestCase):
+class StaticFinderTests(unittest.TestCase):
     def setUp(self):
-        self.finder = ComponentStaticFinder(('MOCK_BASE_DIR', 'MOCK_BASE_DIR_2'))
-
-    def test_base_dir_set(self):
-        """On __init___ ComponentStaticSetter should set its component_base_directories to component_base_directories
-        arg or the default from the Helio settings."""
-        self.assertEqual(self.finder.component_base_directories, ('MOCK_BASE_DIR', 'MOCK_BASE_DIR_2'))
-        finder = ComponentStaticFinder()
-        self.assertEqual(finder.component_base_directories, ('SETTINGS_BASE',))
+        self.finder = ComponentStaticFinder()
+        self.finder.component_base_directories = ('MOCK_BASE_DIR', 'MOCK_BASE_DIR_2')
 
     @patch('helio.heliodjango.finders.exists', return_value=True)
     def test_single_get(self, mock_exists):
@@ -85,6 +76,7 @@ class StaticFindersTests(unittest.TestCase):
         ('/component_name/sub_component/static/', [], ('file2.js', 'file3.css', 'ignore.me')))
     )
     def test_component_static_list(self, mock_walk):
+        """The list function should skip directories that aren't 'static' dirs, and files that match the ignore list."""
         self.finder.component_base_directories = ('MOCK_BASE_DIR',)
         static_files = [static_file for static_file in self.finder.list(['^ignore'])]
         self.assertEqual(len(static_files), 3)
@@ -96,3 +88,36 @@ class StaticFindersTests(unittest.TestCase):
         self.assertEqual(static_files[0][0], 'file.js')
         self.assertEqual(static_files[1][0], 'file2.js')
         self.assertEqual(static_files[2][0], 'file3.css')
+
+
+class TemplateLoaderTests(unittest.TestCase):
+    def setUp(self):
+        self.loader = ComponentTemplateLoader()
+        self.loader.component_base_directories = ('MOCK_BASE_DIR', 'MOCK_BASE_DIR_2')
+
+    def test_non_nested_template_source_generation(self):
+        """Non-nested components are expected to have a template of the same name in the same directory as the
+        Controller"""
+        sources = [source for source in self.loader.get_template_sources('component.html')]
+
+        self.assertEqual(len(sources), 2)
+        self.assertEqual(sources[0], 'MOCK_BASE_DIR/component/component.html')
+        self.assertEqual(sources[1], 'MOCK_BASE_DIR_2/component/component.html')
+
+    def test_nested_template_source_generation(self):
+        """Nested components should use the dotted component name to identify the component directory, and then / to
+        identify the template within."""
+        sources = [source for source in self.loader.get_template_sources('component.child.html')]
+        self.assertEqual(len(sources), 2)
+        self.assertEqual(sources[0], 'MOCK_BASE_DIR/component/child/child.html')
+        self.assertEqual(sources[1], 'MOCK_BASE_DIR_2/component/child/child.html')
+
+        sources = [source for source in self.loader.get_template_sources('deeply.nested.component.and.child.html')]
+        self.assertEqual(len(sources), 2)
+        self.assertEqual(sources[0], 'MOCK_BASE_DIR/deeply/nested/component/and/child/child.html')
+        self.assertEqual(sources[1], 'MOCK_BASE_DIR_2/deeply/nested/component/and/child/child.html')
+
+        sources = [source for source in self.loader.get_template_sources('component.child/another.html')]
+        self.assertEqual(len(sources), 2)
+        self.assertEqual(sources[0], 'MOCK_BASE_DIR/component/child/another.html')
+        self.assertEqual(sources[1], 'MOCK_BASE_DIR_2/component/child/another.html')
