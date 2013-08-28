@@ -1,6 +1,6 @@
 import unittest
-from mock import patch, MagicMock
-from base import BaseViewController
+from mock import patch, MagicMock, PropertyMock
+from base import BaseViewController, render
 from helio.helio_exceptions import UnattachedControllerError
 from helio.viewstate.viewstate import ViewState
 
@@ -245,6 +245,19 @@ class TestBaseControllerFunctions(unittest.TestCase):
         mock_request = MagicMock()
         self.root.render(mock_context, mock_request)
         mock_render.assert_called_with('mock_template.html', {'test': 'mockval', 'one': child_one}, mock_request)
+
+    @patch('helio.controller.base.TEMPLATE_RENDERER', 'mock.module.render')
+    def test_render_import(self):
+        mock_render_func = MagicMock()
+        mock_module = MagicMock()
+        mock_module.render = mock_render_func
+
+        with patch('__builtin__.__import__', return_value=mock_module) as mock_import:
+            render('template.html', 'context', 'request')
+
+            self.assertEqual('mock.module.render', mock_import.call_args[0][0])
+            self.assertEqual('render', mock_import.call_args[0][3])
+            mock_module.render.assert_called_with('template.html', 'context', 'request')
 
 
 if __name__ == '__main__':

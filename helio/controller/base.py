@@ -1,8 +1,12 @@
+from helio.settings import TEMPLATE_RENDERER
 from helio.helio_exceptions import UnattachedControllerError
 
 
 def render(template_name, context, request):
-    pass
+    render_function_name = TEMPLATE_RENDERER.split('.')[-1]
+    render_module = __import__(TEMPLATE_RENDERER, globals(), locals(), render_function_name)
+    render_func = getattr(render_module, render_function_name)
+    return render_func(template_name, context, request)
 
 
 class BaseViewController(object):
