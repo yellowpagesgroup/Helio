@@ -29,15 +29,15 @@ class ViewState(object):
         controller = self.root_controller
 
         for path_component in split_path[1:]:
-            controller = controller.get_named_child(path_component)
+            controller = controller.get_child(path_component)
 
         return controller
 
     def _add_controller_to_parent(self, parent_controller, controller, child_key, is_push):
         if is_push:
-            parent_controller.push_named_child(child_key, controller)
+            parent_controller.push_child(child_key, controller)
         else:
-            parent_controller.set_named_child(child_key, controller)
+            parent_controller.set_child(child_key, controller)
 
     def _parent_controller_and_child_key_from_path(self, path):
         split_path = split_and_validate_path(path)
@@ -87,7 +87,7 @@ class ViewState(object):
     def pop_controller(self, path):
         """Pop a controller from the stack at the given path."""
         parent_controller, child_key = self._parent_controller_and_child_key_from_path(path)
-        return parent_controller.pop_named_child(child_key)
+        return parent_controller.pop_child(child_key)
 
 
 class ViewStateManager(object):

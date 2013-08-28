@@ -32,9 +32,9 @@ class TestViewStateClass(unittest.TestCase):
         self.child_three = BaseViewController()
 
         self.vs = ViewState(self.root_controller)
-        self.root_controller.set_named_child('one', self.child_one)
-        self.child_one.set_named_child('two', self.child_two)
-        self.child_two.set_named_child('three', self.child_three)
+        self.root_controller.set_child('one', self.child_one)
+        self.child_one.set_child('two', self.child_two)
+        self.child_two.set_child('three', self.child_three)
 
     def test_view_state_init(self):
         """A ViewState can only be inited with a root controller arg."""
@@ -62,9 +62,9 @@ class TestViewStateClass(unittest.TestCase):
     def test_component_path_insert(self):
         """A component can be inserted directly using a path, replacing the existing stack there."""
         new_component = BaseViewController()
-        self.child_one.set_named_child = MagicMock()
+        self.child_one.set_child = MagicMock()
         self.vs.insert_controller('page.one.four', new_component)
-        self.child_one.set_named_child.assert_called_with('four', new_component)
+        self.child_one.set_child.assert_called_with('four', new_component)
 
     def test_new_component_path_insert(self):
         """A new controller can be instantiated (based on component name) and then can be inserted directly using a view
@@ -80,9 +80,9 @@ class TestViewStateClass(unittest.TestCase):
     def test_component_path_push(self):
         """A component can be pushed onto the stack at a path."""
         new_component = MagicMock()
-        self.child_one.push_named_child = MagicMock()
+        self.child_one.push_child = MagicMock()
         self.vs.push_controller('page.one.four', new_component)
-        self.child_one.push_named_child.assert_called_with('four', new_component)
+        self.child_one.push_child.assert_called_with('four', new_component)
 
     def test_new_component_path_push(self):
         """A new controller can be instantiated (based on component name) and then can be pushed directly using a view
@@ -98,16 +98,16 @@ class TestViewStateClass(unittest.TestCase):
     def test_component_path_pop(self):
         """A component can be popped from the stack by giving its path to the ViewState."""
         # tree looks like this -> page.one.two.three
-        self.child_two.pop_named_child = MagicMock(return_value=self.child_three)
-        self.child_one.pop_named_child = MagicMock(return_value=self.child_two)
+        self.child_two.pop_child = MagicMock(return_value=self.child_three)
+        self.child_one.pop_child = MagicMock(return_value=self.child_two)
 
         child_three = self.vs.pop_controller('page.one.two.three')
         child_two = self.vs.pop_controller('page.one.two')
 
         self.assertEqual(self.child_three, child_three)
         self.assertEqual(self.child_two, child_two)
-        self.child_two.pop_named_child.assert_called_with('three')
-        self.child_one.pop_named_child.assert_called_with('two')
+        self.child_two.pop_child.assert_called_with('three')
+        self.child_one.pop_child.assert_called_with('two')
 
     def test_page_pop_fails(self):
         """ValueError is raised when trying to pop the root (page)."""

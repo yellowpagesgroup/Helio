@@ -1,5 +1,5 @@
 import unittest
-from mock import MagicMock
+from mock import patch, MagicMock
 from base import BaseViewController
 from helio.helio_exceptions import UnattachedControllerError
 from helio.viewstate.viewstate import ViewState
@@ -14,8 +14,8 @@ class TestBaseControllerFunctions(unittest.TestCase):
         """Children can be set and retrieved by name."""
         child = MagicMock()
         bc = BaseViewController()
-        bc.set_named_child('test-child', child)
-        retrieved_child = bc.get_named_child('test-child')
+        bc.set_child('test-child', child)
+        retrieved_child = bc.get_child('test-child')
         self.assertEqual(child, retrieved_child)
 
     def test_root_controller_path(self):
@@ -44,7 +44,7 @@ class TestBaseControllerFunctions(unittest.TestCase):
         """A controller that is not the root has its local_id set when attached to its parent."""
         parent = BaseViewController()
         child = BaseViewController()
-        parent.set_named_child('child-key', child)
+        parent.set_child('child-key', child)
         self.assertEqual(child.local_id, 'child-key')
 
     def test_named_child_path_generation(self):
@@ -52,7 +52,7 @@ class TestBaseControllerFunctions(unittest.TestCase):
         root = BaseViewController()
         child = BaseViewController()
         ViewState(root)
-        root.set_named_child('child-key', child)
+        root.set_child('child-key', child)
         self.assertEqual(child.path, 'page.child-key')
 
     def test_named_child_post_attach_call(self):
@@ -60,7 +60,7 @@ class TestBaseControllerFunctions(unittest.TestCase):
         root = BaseViewController()
         child = BaseViewController()
         child.post_attach = MagicMock()
-        root.set_named_child('child-key', child)
+        root.set_child('child-key', child)
         child.post_attach.assert_called_with()
 
     def test_named_child_replacement_event_calls(self):
@@ -73,16 +73,16 @@ class TestBaseControllerFunctions(unittest.TestCase):
 
         child2 = BaseViewController()
 
-        self.root.set_named_child('child-key', child1)
+        self.root.set_child('child-key', child1)
         child1.post_attach.assert_called_with()
-        self.root.set_named_child('child-key', child2)
+        self.root.set_child('child-key', child2)
         child1.pre_detach.assert_called_with()
         child1.post_detach.assert_called_with()
 
     def test_view_state_retrieval(self):
         """All controllers in the view hierarchy share the same view_state."""
         child = BaseViewController()
-        self.root.set_named_child('child-key', child)
+        self.root.set_child('child-key', child)
         self.assertEqual(self.root.view_state, self.view_state)
         self.assertEqual(child.view_state, self.view_state)
 
@@ -96,9 +96,9 @@ class TestBaseControllerFunctions(unittest.TestCase):
         child2 = BaseViewController()
         child2.post_attach = MagicMock()
 
-        self.root.push_named_child('child-key', child1)
-        self.root.push_named_child('child-key', child2)
-        self.assertEqual(self.root.get_named_child('child-key'), child2)
+        self.root.push_child('child-key', child1)
+        self.root.push_child('child-key', child2)
+        self.assertEqual(self.root.get_child('child-key'), child2)
 
         child1.pre_detach.assert_called_with()
         child1.post_detach.assert_called_with()
@@ -112,13 +112,13 @@ class TestBaseControllerFunctions(unittest.TestCase):
         child2.post_detach = MagicMock()
         child2.pre_detach = MagicMock()
 
-        self.root.push_named_child('child-key', child1)
-        self.root.push_named_child('child-key', child2)
-        retrieved_child_2 = self.root.pop_named_child('child-key')
+        self.root.push_child('child-key', child1)
+        self.root.push_child('child-key', child2)
+        retrieved_child_2 = self.root.pop_child('child-key')
         self.assertEqual(child2, retrieved_child_2)
         child2.pre_detach.assert_called_with()
         child2.post_detach.assert_called_with()
-        self.assertEqual(self.root.get_named_child('child-key'), child1)
+        self.assertEqual(self.root.get_child('child-key'), child1)
 
     def test_js_id_generation(self):
         """A class' js_id should be None if has_js=False, otherwise it should be js_id property (if set) then
@@ -183,10 +183,10 @@ class TestBaseControllerFunctions(unittest.TestCase):
         child_three_four = BaseViewController()
         child_three_four.asset_map = MagicMock(return_value='asset_three_four')
 
-        self.root.set_named_child('one', child_one)
-        child_one.set_named_child('two', child_one_two)
-        self.root.set_named_child('three', child_three)
-        child_three.set_named_child('four', child_three_four)
+        self.root.set_child('one', child_one)
+        child_one.set_child('two', child_one_two)
+        self.root.set_child('three', child_three)
+        child_three.set_child('four', child_three_four)
 
         asset_map_tree = self.root.class_map_tree({})
 
@@ -199,6 +199,52 @@ class TestBaseControllerFunctions(unittest.TestCase):
         self.assertEqual(asset_map_tree['page.one.two'], 'asset_one_two')
         self.assertEqual(asset_map_tree['page.three'], 'asset_three')
         self.assertEqual(asset_map_tree['page.three.four'], 'asset_three_four')
+
+    def test_parent_context_get(self):
+        """If a controller doesn't have a context, it will take its parent's as a starting point."""
+        child_one = BaseViewController()
+        self.root.set_child('one', child_one)
+        mock_context = MagicMock()
+        self.root.context = mock_context
+        self.assertEqual(mock_context, child_one.get_context())
+
+    def test_parent_request_get(self):
+        """If a controller does not have a request object set, it should get one from its parent."""
+        child_one = BaseViewController()
+        self.root.set_child('one', child_one)
+        mock_request = MagicMock()
+        self.root.request = mock_request
+        self.assertEqual(mock_request, child_one.get_request())
+
+    def test_passed_request_get(self):
+        """If a request is passed into request_get, it should be returned, rather than the controller's request atrr."""
+        first_req = MagicMock()
+        self.root.request = first_req
+        second_req = MagicMock()
+        self.assertEqual(self.root.get_request(second_req), second_req)
+
+    @patch('helio.controller.base.render')
+    def test_controller_render(self, mock_render):
+        """The controller render method should call the standalone render method with the template name, context and
+        request. The controller should not replace values in the context with a child if the key already exists."""
+        self.root.template_name = 'mock_template.html'
+        child_one = BaseViewController()
+        self.root.set_child('one', child_one)
+        mock_context = {'test': 'mockval', 'one': 'test_one'}
+        mock_request = MagicMock()
+        self.root.render(mock_context, mock_request)
+        mock_render.assert_called_with('mock_template.html', mock_context, mock_request)
+
+    @patch('helio.controller.base.render')
+    def test_child_controller_context_add(self, mock_render):
+        """The controller should insert child components into the context."""
+        self.root.template_name = 'mock_template.html'
+        child_one = BaseViewController()
+        self.root.set_child('one', child_one)
+        mock_context = {'test': 'mockval'}
+        mock_request = MagicMock()
+        self.root.render(mock_context, mock_request)
+        mock_render.assert_called_with('mock_template.html', {'test': 'mockval', 'one': child_one}, mock_request)
 
 
 if __name__ == '__main__':

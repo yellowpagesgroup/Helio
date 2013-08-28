@@ -1,6 +1,10 @@
 from helio.helio_exceptions import UnattachedControllerError
 
 
+def render(template_name, context, request):
+    pass
+
+
 class BaseViewController(object):
     component_name = None
     has_js = False
@@ -9,9 +13,10 @@ class BaseViewController(object):
     _css_id = None
 
     def __init__(self):
-        self._named_children = {}
-        self._indexed_children = []
+        self._children = {}
         self._view_state = None
+        self.context = None
+        self.request = None
 
         self._local_id = None
         self.parent = None
@@ -47,14 +52,14 @@ class BaseViewController(object):
         self.parent = parent
         self.local_id = local_id
 
-    def set_named_child(self, child_key, child):
-        if child_key in self._named_children and len(self._named_children[child_key]):
-            replaced_child = self._named_children[child_key][-1]
+    def set_child(self, child_key, child):
+        if child_key in self._children and len(self._children[child_key]):
+            replaced_child = self._children[child_key][-1]
             replaced_child._pre_detach()
         else:
             replaced_child = None
 
-        self._named_children[child_key] = [child]
+        self._children[child_key] = [child]
         child.attach(self, child_key)
 
         if replaced_child:
@@ -62,18 +67,18 @@ class BaseViewController(object):
 
         child._post_attach()
 
-    def get_named_child(self, child_key):
-        return self._named_children[child_key][-1]
+    def get_child(self, child_key):
+        return self._children[child_key][-1]
 
-    def push_named_child(self, child_key, child):
-        if not child_key in self._named_children:
-            self._named_children[child_key] = []
+    def push_child(self, child_key, child):
+        if not child_key in self._children:
+            self._children[child_key] = []
             replaced_child = None
         else:
-            replaced_child = self._named_children[child_key][-1]
+            replaced_child = self._children[child_key][-1]
             replaced_child._pre_detach()
 
-        self._named_children[child_key].append(child)
+        self._children[child_key].append(child)
         child.attach(self, child_key)
 
         if replaced_child:
@@ -81,14 +86,14 @@ class BaseViewController(object):
 
         child._post_attach()
 
-    def pop_named_child(self, child_key):
-        final_child = self._named_children[child_key].pop(-1)
+    def pop_child(self, child_key):
+        final_child = self._children[child_key].pop(-1)
         final_child._pre_detach()
         final_child._post_detach()
 
-        if self._named_children[child_key]:
-            self._named_children[child_key][-1].attach(self, child_key)
-            self._named_children[child_key][-1]._post_attach()
+        if self._children[child_key]:
+            self._children[child_key][-1].attach(self, child_key)
+            self._children[child_key][-1]._post_attach()
 
         return final_child
 
@@ -115,7 +120,7 @@ class BaseViewController(object):
         return asset_map
 
     def class_map_tree(self, current_tree):
-        for child_controller_stack in self._named_children.itervalues():
+        for child_controller_stack in self._children.itervalues():
             if len(child_controller_stack):
                 child_controller_stack[-1].class_map_tree(current_tree)
 
@@ -145,19 +150,61 @@ class BaseViewController(object):
     def css_id(self, val):
         self._css_id = val
 
-    def render(self, request=None):
-        count = getattr(self, 'count', 0)
-        count += 1
-        self.count = count
-        return 'Hello world! %d' % count
+    def get_request(self, request=None):
+        if request is None:
+            if self.request:
+                return self.request
+
+            if self.parent:
+                return self.parent.get_request()
+
+        return request
+
+    def _context_insert_children(self):
+        for context_var in self._children:
+            if not context_var in self.context:
+                child = self.get_child(context_var)
+
+                if child is not None:
+                    self.context[context_var] = self.get_child(context_var)
+
+    def get_context(self):
+        if self.context is None:
+            if self.parent:
+                self.context = self.parent.get_context()
+            else:
+                self.context = {}
+
+        return self.context
+
+    def _context_setup(self):
+        self.get_context()
+        self._context_insert_children()
+        self.context_setup()
+
+    def render(self, context=None, request=None):
+        self._context_setup()
+        self.context.update(context)
+        self.request = self.get_request(request)
+
+        return render(self.template_name, self.context, self.request)
 
     # Controllers should override the following methods, as appropriate
 
+    def context_setup(self):
+        """Set up the render context with variables to go to the template."""
+        pass
+
     def post_attach(self):
+        """The controller now has a ViewState (and path) so it should do things here that rely on having them."""
         pass
 
     def pre_detach(self):
+        """The controller is about to be detached from its ViewState, so do things teardown things that can only be
+        done while it still has a path e.g. unsubscribe from notifications."""
         pass
 
     def post_detach(self):
+        """Controller has been detached from the ViewState, do any final clean ups here (but nothing that involves
+        a path or having access to the ViewState."""
         pass
