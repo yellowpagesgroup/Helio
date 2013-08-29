@@ -1,5 +1,5 @@
 import unittest
-from mock import patch, MagicMock, PropertyMock
+from mock import patch, MagicMock
 from base import BaseViewController, render
 from helio.helio_exceptions import UnattachedControllerError
 from helio.viewstate.viewstate import ViewState

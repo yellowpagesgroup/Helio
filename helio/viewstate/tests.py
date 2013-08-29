@@ -18,10 +18,15 @@ class TestViewStateFunctions(unittest.TestCase):
         self.assertEqual(split_and_validate_path('page.test.path.one.two.three'),
                          (['page', 'test', 'path', 'one', 'two', 'three']))
 
-    def test_default_viewstate_generator(self):
-        """get_default_viewstate should return a ViewState instance."""
-        vs = get_default_viewstate()
-        self.assertIsInstance(vs, ViewState)
+    @patch('helio.viewstate.viewstate.DEFAULT_ROOT_COMPONENT', 'root-component')
+    def test_default_viewstate_default_controller(self):
+        """get_default_viewstate should instantiate the controller defined in the DEFAULT_ROOT_COMPONENT setting."""
+        mock_controller = MagicMock()
+        with patch('helio.viewstate.viewstate.init_controller', return_value=mock_controller) as mock_init:
+            vs = get_default_viewstate()
+            mock_init.assert_called_with('root-component')
+            self.assertEqual(vs.root_controller, mock_controller)
+            self.assertIsInstance(vs, ViewState)
 
 
 class TestViewStateClass(unittest.TestCase):
@@ -114,24 +119,25 @@ class TestViewStateClass(unittest.TestCase):
         self.assertRaises(ValueError, self.vs.pop_controller, 'page')
 
 
+@patch('helio.viewstate.viewstate.init_controller', return_value=MagicMock())
 class TestViewStateManagerClass(unittest.TestCase):
     def setUp(self):
         self.vsm = ViewStateManager()
 
-    def test_viewstate_creation_on_empty(self):
+    def test_viewstate_creation_on_empty(self, mock_init):
         """Get VS with None id (when no viewstates exist) should create a VS and return it and its index."""
         vs = self.vsm.get_view_state(None)
         self.assertEqual(vs.index, 0)
         self.assertIsInstance(vs, ViewState)
 
-    def test_viewstate_retrieval(self):
+    def test_viewstate_retrieval(self, mock_init):
         """Get VS with an index that exists should return the VS at that index."""
         vs1 = self.vsm.get_view_state(None)
         vs2 = self.vsm.get_view_state(0)
         self.assertEqual(vs1.index, 0)
         self.assertEqual(vs1, vs2)
 
-    def test_viewstate_unexpected_creation(self):
+    def test_viewstate_unexpected_creation(self, mock_init):
         """Retrieving a viewstate outside the VS range should create a new VS and return it and its index."""
         vs1 = self.vsm.get_view_state(None)
         vs2 = self.vsm.get_view_state(3)
@@ -140,13 +146,13 @@ class TestViewStateManagerClass(unittest.TestCase):
         self.assertEqual(vs2.index, 1)
         self.assertNotEqual(vs1, vs2)
 
-    def test_viewstate_creation(self):
+    def test_viewstate_creation(self, mock_init):
         """Get VS with None id should create a VS and return it and its index."""
         vs1 = self.vsm.get_view_state(None)
         vs2 = self.vsm.get_view_state(None)
         self.assertNotEqual(vs1, vs2)
 
-    def test_viewstate_creation_no_create(self):
+    def test_viewstate_creation_no_create(self, mock_init):
         """Get VS with invalid id should raise ViewStateError if no_create is True."""
         with self.assertRaises(ViewStateError):
             self.vsm.get_view_state(None, no_create=True)
@@ -154,7 +160,7 @@ class TestViewStateManagerClass(unittest.TestCase):
         with self.assertRaises(ViewStateError):
             self.vsm.get_view_state(5, no_create=True)
 
-    def test_negative_index_creation(self):
+    def test_negative_index_creation(self, mock_init):
         """If the negative VS index is given, a new VS should be created (rather than using using it as a reverse
         index)."""
         vs = self.vsm.get_view_state(-1)

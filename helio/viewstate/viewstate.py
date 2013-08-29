@@ -1,5 +1,5 @@
+from helio.settings import DEFAULT_ROOT_COMPONENT
 from helio.controller.helpers import init_controller
-from helio.controller.base import BaseViewController
 from helio.helio_exceptions import ViewStateError
 
 
@@ -109,7 +109,6 @@ class ViewStateManager(object):
         return view_state
 
 
-
 def get_default_viewstate():
-    root = BaseViewController()
+    root = init_controller(DEFAULT_ROOT_COMPONENT)
     return ViewState(root)

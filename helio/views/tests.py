@@ -4,8 +4,9 @@ from views import get_view_state, get_controller_data, dispatch_notification
 from helio.settings import VIEWSTATE_MANAGER_SESSION_KEY
 
 
+@patch('helio.viewstate.viewstate.init_controller', return_value=MagicMock())
 class GetViewStateTests(unittest.TestCase):
-    def test_adds_vsm_to_session(self):
+    def test_adds_vsm_to_session(self, mock_init):
         """VSM should be added to session in the VIEWSTATE_MANAGER_SESSION_KEY key if it's not
         already there."""
         session = {}
@@ -18,7 +19,7 @@ class GetViewStateTests(unittest.TestCase):
         get_view_state(0, session)
         self.assertEqual(session[VIEWSTATE_MANAGER_SESSION_KEY], mock_vsm)
 
-    def test_vsm_call(self):
+    def test_vsm_call(self, mock_init):
         """If the VSM can't link the requested viewstate (maybe it is out of range or already linked) then an new VS
         should be created, it should be linked, and its index returned."""
         session = {VIEWSTATE_MANAGER_SESSION_KEY: MagicMock()}
@@ -38,8 +39,9 @@ class MockedControllerTest(unittest.TestCase):
         self.session = {VIEWSTATE_MANAGER_SESSION_KEY: self.mock_vsm}
 
 
+@patch('helio.viewstate.viewstate.init_controller', return_value=MagicMock())
 class GetControllerDataTests(MockedControllerTest):
-    def test_get_controller_data(self):
+    def test_get_controller_data(self, mock_init):
         """get_controller_data should get the view state from the VSM, retrieve the controller by path, then render
         the controller and its assets."""
         self.mock_controller.render = MagicMock(return_value='controller html')
@@ -54,8 +56,9 @@ class GetControllerDataTests(MockedControllerTest):
         self.assertEqual({'html': 'controller html', 'class_map': 'class_map'}, controller_data)
 
 
+@patch('helio.viewstate.viewstate.init_controller', return_value=MagicMock())
 class ProcessNotificationTests(MockedControllerTest):
-    def test_process_notification(self):
+    def test_process_notification(self, mock_init):
         """process_notification should get the target controller, call process_notification on it with the notification
         name, data and request, then return a list of queued events"""
         notification_data = {'data': ['some', 'data']}
