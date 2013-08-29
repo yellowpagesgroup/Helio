@@ -18,7 +18,7 @@ def get_view_state(vs_id, session):
 
 def get_controller_data(path, vs_id, session, request=None):
     controller, _ = _get_controller_and_view_state_from_session(path, vs_id, session)
-    html = controller.render(request)
+    html = controller.render(request=request)
     class_map = controller.class_map_tree({})
 
     return {'html': html, 'class_map': class_map}

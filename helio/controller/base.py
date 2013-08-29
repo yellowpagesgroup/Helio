@@ -200,7 +200,8 @@ class BaseViewController(object):
 
     def render(self, context=None, request=None):
         self._context_setup()
-        self.context.update(context)
+        if context is not None:
+            self.context.update(context)
         self.request = self.get_request(request)
 
         return render(self.template_name, self.context, self.request)

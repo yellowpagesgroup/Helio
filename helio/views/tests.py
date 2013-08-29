@@ -51,7 +51,7 @@ class GetControllerDataTests(MockedControllerTest):
 
         self.mock_vsm.get_view_state.assert_called_with('vs_id', no_create=True)
         self.mock_vs.controller_from_path.assert_called_with('controller.path')
-        self.mock_controller.render.assert_called_with('request')
+        self.mock_controller.render.assert_called_with(request='request')
         self.mock_controller.class_map_tree.assert_called_with({})
         self.assertEqual({'html': 'controller html', 'class_map': 'class_map'}, controller_data)
 
