@@ -7,8 +7,10 @@ var controllerDepthSorter = function(a, b){
 }
 
 var componentNameToAssetPath = function(componentName, assetType){
+    var splitPathComponents = componentName.split('.');
+    var finalPathComponent = splitPathComponents[splitPathComponents.length - 1];
     var assetPath = componentName.replace(/\./g, '/');
-    assetPath += '.' + assetType;
+    assetPath += '/' + finalPathComponent + '.' + assetType;
     return assetPath;
 }
 

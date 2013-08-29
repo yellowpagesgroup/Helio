@@ -35,7 +35,7 @@ describe("Controller helpers", function(){
     });
 
     it("componentNameToAssetPath should transform a component name and extension to a path string", function(){
-       expect(componentNameToAssetPath('a.component.name', 'css')).toBe('a/component/name.css');
+       expect(componentNameToAssetPath('a.component.name', 'css')).toBe('a/component/name/name.css');
     });
 });
 

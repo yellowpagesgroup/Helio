@@ -62,7 +62,7 @@ describe("DynamicLoader", function(){
     it("should calls .getScript in retrieveClass, converting the type to a js path", function(){
         var mockGetScript = spyOn($, 'getScript');
         dynamicLoader.retrieveClass('type.identifier');
-        expect(mockGetScript).toHaveBeenCalledWith('/mock-static/type/identifier.js');
+        expect(mockGetScript).toHaveBeenCalledWith('/mock-static/type/identifier/identifier.js');
     });
 
     it("should immediately call setupAndRegisterAfterDependenciesComplete on queueClassRegister if dependencies are null or [] or ''", function(){
