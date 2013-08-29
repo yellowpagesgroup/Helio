@@ -3,8 +3,9 @@ from helio.helio_exceptions import UnattachedControllerError
 
 
 def render(template_name, context, request):
-    render_function_name = TEMPLATE_RENDERER.split('.')[-1]
-    render_module = __import__(TEMPLATE_RENDERER, globals(), locals(), render_function_name)
+    split_renderer_module = TEMPLATE_RENDERER.split('.')
+    render_function_name = split_renderer_module[-1]
+    render_module = __import__('.'.join(split_renderer_module[:-1]), globals(), locals(), split_renderer_module[-1])
     render_func = getattr(render_module, render_function_name)
     return render_func(template_name, context, request)
 
@@ -15,6 +16,7 @@ class BaseViewController(object):
     _js_id = None
     has_css = False
     _css_id = None
+    _template_name = None
 
     def __init__(self):
         self._children = {}
@@ -153,6 +155,16 @@ class BaseViewController(object):
     @css_id.setter
     def css_id(self, val):
         self._css_id = val
+
+    @property
+    def template_name(self):
+        if self._template_name:
+            return self._template_name
+        return self.component_name + '.html'
+
+    @template_name.setter
+    def template_name(self, val):
+        self._template_name = val
 
     def get_request(self, request=None):
         if request is None:

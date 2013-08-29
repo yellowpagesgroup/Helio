@@ -1,18 +1,21 @@
+from imp import load_source
+from os.path import join
 from helio.helio_exceptions import ControllerImportError
 from helio.settings import COMPONENT_BASE_DIRECTORIES
 
 
 def get_controller_from_module_path(module_name):
+    mod = None
+
     for path in COMPONENT_BASE_DIRECTORIES:
         mod = None
 
         module_final = module_name.split('.')[-1]
-
-        namespace = '%s.%s.%s' % (path, module_name, module_final)
+        controller_path = join(path, module_name.replace('.', '/'), module_final + '.py')
         try:
-            mod = __import__(namespace, globals(), locals(), "Controller")
+            mod = load_source(module_final, controller_path)
             break
-        except ImportError:
+        except (IOError, ImportError):
             pass
 
     if mod is not None:

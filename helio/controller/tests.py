@@ -200,6 +200,13 @@ class TestBaseControllerFunctions(unittest.TestCase):
         self.assertEqual(asset_map_tree['page.three'], 'asset_three')
         self.assertEqual(asset_map_tree['page.three.four'], 'asset_three_four')
 
+    def test_template_name_generation(self):
+        """Template name should be component_name.html if not set, otherwise it should be whatever was set."""
+        self.root.component_name = 'test.component'
+        self.assertEqual(self.root.template_name, 'test.component.html')
+        self.root.template_name = 'mock-template-name'
+        self.assertEqual(self.root.template_name, 'mock-template-name')
+
     def test_parent_context_get(self):
         """If a controller doesn't have a context, it will take its parent's as a starting point."""
         child_one = BaseViewController()
@@ -255,7 +262,7 @@ class TestBaseControllerFunctions(unittest.TestCase):
         with patch('__builtin__.__import__', return_value=mock_module) as mock_import:
             render('template.html', 'context', 'request')
 
-            self.assertEqual('mock.module.render', mock_import.call_args[0][0])
+            self.assertEqual('mock.module', mock_import.call_args[0][0])
             self.assertEqual('render', mock_import.call_args[0][3])
             mock_module.render.assert_called_with('template.html', 'context', 'request')
 
