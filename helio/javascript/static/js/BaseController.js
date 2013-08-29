@@ -28,6 +28,21 @@ var controllerClassMapTransform = function(controllerClassMap){
     return newControllerClassMap;
 }
 
+var cssIsAttached = function(controllerPath){
+    return $('#css_' + escapeSelector(controllerPath)).length != 0;
+};
+
+var attachCSS = function(controllerPath, componentCSS){
+    var staticBase = g_helioSettings.static_base || '/static/';
+    var cssPath = staticBase + componentNameToAssetPath(componentCSS, 'css');
+    $('head').append('<link rel="stylesheet" type="text/css" href="' + cssPath +'" id="css_' + controllerPath+ '">');
+}
+
+var detachCSS = function(controllerPath){
+    var cssSelector = escapeSelector(controllerPath);
+    $('#css_' + cssSelector).remove();
+}
+
 var Controller = klass(function(controllerPath, selector, extraData){
     this.controllerPath = controllerPath;
     if(selector == undefined)
@@ -84,10 +99,10 @@ var Controller = klass(function(controllerPath, selector, extraData){
         var controllerClassID = controllerAssets['script'];
 
         if(controllerClassID == undefined){
-            this.detachCSS();
             g_helioLoader.controllerTypeNameRegistry[controllerPath] = undefined;
 
             var controller = new Controller(controllerPath);
+            detachCSS(controllerPath);
             controller.attach();
 
             g_helioLoader.controllerRegistry[controllerPath] = controller;
@@ -101,15 +116,15 @@ var Controller = klass(function(controllerPath, selector, extraData){
         }
 
         if(!attached) {
-            this.detachCSS();
+            detachCSS(controllerPath);
             g_helioLoader.controllerTypeNameRegistry[controllerPath] = controllerClassID;
             g_helioLoader.initializeController(controllerPath, controllerClassID);
         }
 
         var componentCSS = controllerAssets['css'];
 
-        if(componentCSS != undefined && !this.cssIsAttached())
-            this.attachCSS(componentCSS);
+        if(componentCSS != undefined && !cssIsAttached(controllerPath))
+            attachCSS(controllerPath, componentCSS);
     },
     attach: function(){
         this.$container.data('attached', true);
@@ -120,7 +135,7 @@ var Controller = klass(function(controllerPath, selector, extraData){
     isAttached: function(){
         return this.$container.data('attached');
     },
-    cssIsAttached: function(){
+    /*cssIsAttached: function(){
         return $('#css_' + escapeSelector(this.controllerPath)).length != 0;
     },
     attachCSS: function(componentCSS){
@@ -131,7 +146,7 @@ var Controller = klass(function(controllerPath, selector, extraData){
     detachCSS: function(){
         var cssSelector = escapeSelector(this.controllerPath);
         $('#css_' + cssSelector).remove();
-    },
+    },*/
     processNotification: function(notificationName, data){
         var splitNotification = notificationName.split(':'), notificationArgs = '';
 

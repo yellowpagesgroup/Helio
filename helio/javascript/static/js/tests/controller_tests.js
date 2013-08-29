@@ -37,6 +37,52 @@ describe("Controller helpers", function(){
     it("componentNameToAssetPath should transform a component name and extension to a path string", function(){
        expect(componentNameToAssetPath('a.component.name', 'css')).toBe('a/component/name/name.css');
     });
+
+    it("attachCSS should attach a <link> element to the head with the CSS path and controller path", function(){
+        window.g_helioSettings = {
+            controller_url_base: '/mock/controller/',
+            viewstate_id: 'viewstate_id',
+            static_base: '/mock-static/'
+
+        };
+
+        var mockJQResult = {
+            append: jasmine.createSpy()
+        };
+
+        var mockJQ = spyOn(window, '$').andReturn(mockJQResult);
+        var mockAssetPathGen = spyOn(window, 'componentNameToAssetPath').andReturn('mock-assetpath');
+        attachCSS('the.controller.path', 'mock-asset');
+        expect(mockAssetPathGen).toHaveBeenCalledWith('mock-asset', 'css');
+        expect(mockJQ).toHaveBeenCalledWith('head');
+        expect(mockJQResult.append).toHaveBeenCalledWith('<link rel="stylesheet" type="text/css" href="/mock-static/mock-assetpath" id="css_the.controller.path">');
+    });
+
+    it("cssIsAttached should escape the selector before using it in the query", function(){
+        var controllerPath = 'this.is.my.path';
+        var mockJQ = spyOn(window, '$');
+        mockJQ.andReturn([]);
+        var mockSelectorEscaper = spyOn(window, 'escapeSelector').andCallThrough();
+        expect(cssIsAttached(controllerPath)).toBe(false);
+        expect(mockSelectorEscaper).toHaveBeenCalledWith(controllerPath);
+        expect(mockJQ).toHaveBeenCalledWith('#css_this\\.is\\.my\\.path');
+
+        mockJQ.andReturn(['result']);
+        expect(cssIsAttached(controllerPath)).toBe(true);
+    });
+
+    it("detachCSS should locate the css <link> and remove it, escaping the selector first", function(){
+        var mockJQResult = {
+            remove: jasmine.createSpy()
+        };
+        var mockPath = 'this.is.my.path';
+        var mockJQ = spyOn(window, '$').andReturn(mockJQResult);
+        var mockSelectorEscape = spyOn(window, 'escapeSelector').andReturn('mock-selector');
+        detachCSS(mockPath);
+        expect(mockSelectorEscape).toHaveBeenCalledWith(mockPath);
+        expect(mockJQ).toHaveBeenCalledWith('#css_mock-selector');
+        expect(mockJQResult.remove).toHaveBeenCalled();
+    });
 });
 
 describe("Controller", function() {
@@ -220,23 +266,23 @@ describe("Controller", function() {
             }
         };
 
-        testController.cssIsAttached = jasmine.createSpy();
-        testController.attachCSS = jasmine.createSpy();
+        window.cssIsAttached = jasmine.createSpy();
+        window.attachCSS = jasmine.createSpy();
         testController._setupController({path: 'noCSS', assets: {'script': 'noCSS'}});
-        expect(testController.cssIsAttached).not.toHaveBeenCalled();
-        expect(testController.attachCSS).not.toHaveBeenCalled();
+        expect(window.cssIsAttached).not.toHaveBeenCalled();
+        expect(window.attachCSS).not.toHaveBeenCalled();
 
-        testController.cssIsAttached = jasmine.createSpy().andCallFake(function(){return true});
-        testController.attachCSS = jasmine.createSpy();
+        window.cssIsAttached = jasmine.createSpy().andCallFake(function(){return true});
+        window.attachCSS = jasmine.createSpy();
         testController._setupController({path: 'attachedCSS', assets: {'script': 'attachedCSS', 'css': 'attachedCSS'}});
-        expect(testController.cssIsAttached).toHaveBeenCalled();
-        expect(testController.attachCSS).not.toHaveBeenCalled();
+        expect(window.cssIsAttached).toHaveBeenCalled();
+        expect(window.attachCSS).not.toHaveBeenCalled();
 
-        testController.cssIsAttached = jasmine.createSpy().andCallFake(function(){return false});
-        testController.attachCSS = jasmine.createSpy();
+        window.cssIsAttached = jasmine.createSpy().andCallFake(function(){return false});
+        window.attachCSS = jasmine.createSpy();
         testController._setupController({path: 'detachedCSS', assets: {'script': 'detachedCSS', 'css': 'detachedCSS'}});
-        expect(testController.cssIsAttached).toHaveBeenCalled();
-        expect(testController.attachCSS).toHaveBeenCalled();
+        expect(window.cssIsAttached).toHaveBeenCalled();
+        expect(window.attachCSS).toHaveBeenCalled();
     });
 
     it("should call the dynamicLoader attachClass if the controller type has changed", function(){
@@ -249,44 +295,6 @@ describe("Controller", function() {
         testController._setupController({path: 'not-page', assets: {'script': 'new-script'}});
 
         expect(window.g_helioLoader.initializeController).toHaveBeenCalledWith('not-page', 'new-script');
-    });
-
-    it("should escape its path before using in the CSS attached detector", function(){
-        var mockJQ = spyOn(window, '$');
-        mockJQ.andReturn([]);
-        var mockSelectorEscaper = spyOn(window, 'escapeSelector').andCallThrough();
-        expect(testController.cssIsAttached()).toBe(false);
-        expect(mockSelectorEscaper).toHaveBeenCalledWith('this.is.my.path');
-        expect(mockJQ).toHaveBeenCalledWith('#css_this\\.is\\.my\\.path');
-
-        mockJQ.andReturn(['result']);
-        expect(testController.cssIsAttached()).toBe(true);
-    });
-
-    it("should, on attachCSS, generate a css <link> from its controller path, and component name, and insert it into the head", function(){
-        var mockJQResult = {
-            append: jasmine.createSpy()
-        };
-
-        var mockJQ = spyOn(window, '$').andReturn(mockJQResult);
-        var mockAssetPathGen = spyOn(window, 'componentNameToAssetPath').andReturn('mock-assetpath');
-        testController.attachCSS('mock-asset');
-        expect(mockAssetPathGen).toHaveBeenCalledWith('mock-asset', 'css');
-        expect(mockJQ).toHaveBeenCalledWith('head');
-        expect(mockJQResult.append).toHaveBeenCalledWith('<link rel="stylesheet" type="text/css" href="/mock-static/mock-assetpath" id="css_this.is.my.path">');
-    });
-
-    it("should, on detachCSS, locate the css <link> and remove it", function(){
-        var mockJQResult = {
-            remove: jasmine.createSpy()
-        };
-
-        var mockJQ = spyOn(window, '$').andReturn(mockJQResult);
-        var mockSelectorEscape = spyOn(window, 'escapeSelector').andReturn('mock-selector');
-        testController.detachCSS();
-        expect(mockSelectorEscape).toHaveBeenCalledWith(testController.controllerPath);
-        expect(mockJQ).toHaveBeenCalledWith('#css_mock-selector');
-        expect(mockJQResult.remove).toHaveBeenCalled();
     });
 
     it("should call its load() method on a load notification", function(){
