@@ -47,15 +47,15 @@ class TestBaseControllerFunctions(unittest.TestCase):
         parent.set_child('child-key', child)
         self.assertEqual(child.local_id, 'child-key')
 
-    def test_named_child_path_generation(self):
-        """Test named children paths are generated properly."""
+    def test_child_path_generation(self):
+        """Test children paths are generated properly."""
         root = BaseViewController()
         child = BaseViewController()
         ViewState(root)
         root.set_child('child-key', child)
         self.assertEqual(child.path, 'page.child-key')
 
-    def test_named_child_post_attach_call(self):
+    def test_child_post_attach_call(self):
         """Child's post_attach method is called after it is attached to a parent."""
         root = BaseViewController()
         child = BaseViewController()
@@ -63,8 +63,8 @@ class TestBaseControllerFunctions(unittest.TestCase):
         root.set_child('child-key', child)
         child.post_attach.assert_called_with()
 
-    def test_named_child_replacement_event_calls(self):
-        """Replacing a named child calls the pre_detach and post_detach methods on the final controller in the stack that
+    def test_child_replacement_event_calls(self):
+        """Replacing a child calls the pre_detach and post_detach methods on the final controller in the stack that
         is being replaced."""
         child1 = BaseViewController()
         child1.post_attach = MagicMock()
@@ -101,8 +101,8 @@ class TestBaseControllerFunctions(unittest.TestCase):
         self.root.queue_load(True)
         nc.queue_load.assert_called_with(self.root.path, True)
 
-    def test_named_child_push(self):
-        """After pushing a child to a named stack, it is then retrievable via child. The previous final controller on
+    def test_child_push(self):
+        """After pushing a child to a stack, it is then retrievable via child. The previous final controller on
         the stack should have its pre_detach and post_detach methods called."""
         child1 = BaseViewController()
         child1.pre_detach = MagicMock()
@@ -119,8 +119,8 @@ class TestBaseControllerFunctions(unittest.TestCase):
         child1.post_detach.assert_called_with()
         child2.post_attach.assert_called_with()
 
-    def test_named_child_pop(self):
-        """After pushing a child to a named stack, it can be popped back off."""
+    def test_child_pop(self):
+        """After pushing a child to a stack, it can be popped back off."""
         child1 = BaseViewController()
         child2 = BaseViewController()
 

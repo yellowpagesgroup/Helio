@@ -8,11 +8,11 @@ from helio.helio_exceptions import ViewStateError
 class TestViewStateFunctions(unittest.TestCase):
     def test_path_with_invalid_root(self):
         """ValueError is raised when validating a path that doesn't start with 'page.'"""
-        self.assertRaises(ValueError, split_and_validate_path, 'component.child-component')
+        self.assertRaises(ValueError, split_and_validate_path, 'controller.child-controller')
 
     def test_path_with_blank_compoents(self):
         """ValueError is raised when validating a path that has blank components (i.e. '..' in the path)"""
-        self.assertRaises(ValueError, split_and_validate_path, 'page.component..child-component')
+        self.assertRaises(ValueError, split_and_validate_path, 'page.controller..child-controller')
 
     def test_path_split(self):
         self.assertEqual(split_and_validate_path('page.test.path.one.two.three'),
@@ -53,56 +53,56 @@ class TestViewStateClass(unittest.TestCase):
         vs = ViewState(root_controller)
         self.assertEqual(vs.root_controller, root_controller)
 
-    def test_component_path_retrieval(self):
-        """A component can be retrieved from the tree by its path."""
+    def test_controller_path_retrieval(self):
+        """A controller can be retrieved from the tree by its path."""
         self.assertEqual(self.vs.controller_from_path('page'), self.root_controller)
         self.assertEqual(self.vs.controller_from_path('page.one'), self.child_one)
         self.assertEqual(self.vs.controller_from_path('page.one.two'), self.child_two)
         self.assertEqual(self.vs.controller_from_path('page.one.two.three'), self.child_three)
 
-    def test_root_component_insert_error(self):
-        """Inserting a component at path 'page' is invalid and raises a ValueError."""
-        new_component = BaseViewController
-        self.assertRaises(ValueError, self.vs.insert_controller, 'page', new_component)
+    def test_root_controller_insert_error(self):
+        """Inserting a controller at path 'page' is invalid and raises a ValueError."""
+        new_controller = BaseViewController
+        self.assertRaises(ValueError, self.vs.insert_controller, 'page', new_controller)
 
-    def test_component_path_insert(self):
-        """A component can be inserted directly using a path, replacing the existing stack there."""
-        new_component = BaseViewController()
+    def test_controller_path_insert(self):
+        """A controller can be inserted directly using a path, replacing the existing stack there."""
+        new_controller = BaseViewController()
         self.child_one.set_child = MagicMock()
-        self.vs.insert_controller('page.one.four', new_component)
-        self.child_one.set_child.assert_called_with('four', new_component)
+        self.vs.insert_controller('page.one.four', new_controller)
+        self.child_one.set_child.assert_called_with('four', new_controller)
 
-    def test_new_component_path_insert(self):
-        """A new controller can be instantiated (based on component name) and then can be inserted directly using a view
+    def test_new_controller_path_insert(self):
+        """A new controller can be instantiated (based on controller name) and then can be inserted directly using a view
         path, replacing the existing stack there."""
-        new_component = MagicMock()
+        new_controller = MagicMock()
         self.vs.insert_controller = MagicMock()
-        with patch('helio.viewstate.viewstate.init_controller', return_value=new_component) as patched_init:
-            self.vs.insert_new_controller('page.one.four', 'new.component.path', 'arg1', 'arg2', kwarg1='kwarg1',
+        with patch('helio.viewstate.viewstate.init_controller', return_value=new_controller) as patched_init:
+            self.vs.insert_new_controller('page.one.four', 'new.controller.path', 'arg1', 'arg2', kwarg1='kwarg1',
                                          kwarg2='kwarg2')
-            patched_init.assert_called_with('new.component.path', 'arg1', 'arg2', kwarg1='kwarg1', kwarg2='kwarg2')
-            self.vs.insert_controller.assert_called_with('page.one.four', new_component)
+            patched_init.assert_called_with('new.controller.path', 'arg1', 'arg2', kwarg1='kwarg1', kwarg2='kwarg2')
+            self.vs.insert_controller.assert_called_with('page.one.four', new_controller)
 
-    def test_component_path_push(self):
-        """A component can be pushed onto the stack at a path."""
-        new_component = MagicMock()
+    def test_controller_path_push(self):
+        """A controller can be pushed onto the stack at a path."""
+        new_controller = MagicMock()
         self.child_one.push_child = MagicMock()
-        self.vs.push_controller('page.one.four', new_component)
-        self.child_one.push_child.assert_called_with('four', new_component)
+        self.vs.push_controller('page.one.four', new_controller)
+        self.child_one.push_child.assert_called_with('four', new_controller)
 
-    def test_new_component_path_push(self):
+    def test_new_controller_path_push(self):
         """A new controller can be instantiated (based on component name) and then can be pushed directly using a view
         path, onto the stack there."""
-        new_component = MagicMock()
+        new_controller = MagicMock()
         self.vs.push_controller = MagicMock()
-        with patch('helio.viewstate.viewstate.init_controller', return_value=new_component) as patched_init:
-            self.vs.push_new_controller('page.one.four', 'new.component.path', 'arg1', 'arg2', kwarg1='kwarg1',
+        with patch('helio.viewstate.viewstate.init_controller', return_value=new_controller) as patched_init:
+            self.vs.push_new_controller('page.one.four', 'new.controller.path', 'arg1', 'arg2', kwarg1='kwarg1',
                                          kwarg2='kwarg2')
-            patched_init.assert_called_with('new.component.path', 'arg1', 'arg2', kwarg1='kwarg1', kwarg2='kwarg2')
-            self.vs.push_controller.assert_called_with('page.one.four', new_component)
+            patched_init.assert_called_with('new.controller.path', 'arg1', 'arg2', kwarg1='kwarg1', kwarg2='kwarg2')
+            self.vs.push_controller.assert_called_with('page.one.four', new_controller)
 
-    def test_component_path_pop(self):
-        """A component can be popped from the stack by giving its path to the ViewState."""
+    def test_controller_path_pop(self):
+        """A controller can be popped from the stack by giving its path to the ViewState."""
         # tree looks like this -> page.one.two.three
         self.child_two.pop_child = MagicMock(return_value=self.child_three)
         self.child_one.pop_child = MagicMock(return_value=self.child_two)
