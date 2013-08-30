@@ -135,18 +135,6 @@ var Controller = klass(function(controllerPath, selector, extraData){
     isAttached: function(){
         return this.$container.data('attached');
     },
-    /*cssIsAttached: function(){
-        return $('#css_' + escapeSelector(this.controllerPath)).length != 0;
-    },
-    attachCSS: function(componentCSS){
-        var staticBase = g_helioSettings.static_base || '/static/';
-        var cssPath = staticBase + componentNameToAssetPath(componentCSS, 'css');
-        $('head').append('<link rel="stylesheet" type="text/css" href="' + cssPath +'" id="css_' + this.controllerPath + '">');
-    },
-    detachCSS: function(){
-        var cssSelector = escapeSelector(this.controllerPath);
-        $('#css_' + cssSelector).remove();
-    },*/
     processNotification: function(notificationName, data){
         var splitNotification = notificationName.split(':'), notificationArgs = '';
 
