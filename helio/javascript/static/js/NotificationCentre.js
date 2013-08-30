@@ -51,8 +51,8 @@ var NotificationCentre = klass(function(){
             return;
         }
 
-        for(var notificationIndex = 0; notificationIndex < notificationData.notifications.length; ++notificationIndex)
-            this.queueNotificationDelegation(notificationData.notifications[notificationIndex]);
+        for(var notificationIndex = 0; notificationIndex < notificationData.length; ++notificationIndex)
+            this.queueNotificationDelegation(notificationData[notificationIndex]);
 
         this.postActive = false;
         this.activityStatusChanged();

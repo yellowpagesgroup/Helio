@@ -86,7 +86,7 @@ describe("NotificationCentre", function(){
         var mockASC = spyOn(notificationCentre, 'activityStatusChanged');
         var mockProcessQueue = spyOn(notificationCentre, 'processQueue');
 
-        notificationCentre.notificationPostCallback({'notifications': ['one', 'two', 'three']});
+        notificationCentre.notificationPostCallback(['one', 'two', 'three']);
         expect(mockQND).toHaveBeenCalledWith('one');
         expect(mockQND).toHaveBeenCalledWith('two');
         expect(mockQND).toHaveBeenCalledWith('three');
