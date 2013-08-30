@@ -27,6 +27,7 @@ class TestViewStateFunctions(unittest.TestCase):
             mock_init.assert_called_with('root-component')
             self.assertEqual(vs.root_controller, mock_controller)
             self.assertIsInstance(vs, ViewState)
+            self.assertTrue(hasattr(vs, 'notification_centre'))
 
 
 class TestViewStateClass(unittest.TestCase):

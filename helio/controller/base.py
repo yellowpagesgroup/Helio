@@ -208,6 +208,9 @@ class BaseViewController(object):
 
     # Controllers should override the following methods, as appropriate
 
+    def handle_notification(self, notification_name, data, request):
+        pass
+
     def context_setup(self):
         """Set up the render context with variables to go to the template."""
         pass

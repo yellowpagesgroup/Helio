@@ -110,5 +110,8 @@ class ViewStateManager(object):
 
 
 def get_default_viewstate():
+    from notification import NotificationCentre
     root = init_controller(DEFAULT_ROOT_COMPONENT)
-    return ViewState(root)
+    vs = ViewState(root)
+    NotificationCentre(vs)
+    return vs
