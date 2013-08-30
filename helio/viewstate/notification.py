@@ -76,10 +76,10 @@ class NotificationCentre(object):
         for notification_name in notifications_to_remove:
             del self._notification_listeners[notification_name]
 
-    def queue_client_notification(self, notification_name, component_path, data=None, force=False):
+    def queue_client_notification(self, notification_name, controller_path, data=None, force=False):
         """Queue a notification to be delivered to a specific component in the client. By default, the same notification
         (i.e. same name, path and data) won't be queued twice in a row, but will if force is True."""
-        notification = {'name': notification_name, 'target': component_path}
+        notification = {'name': notification_name, 'target': controller_path}
         if data:
             notification['data'] = data
 
@@ -87,6 +87,9 @@ class NotificationCentre(object):
             return
 
         self._notification_queue.append(notification)
+
+    def queue_load(self, controller_path, scroll_top=False):
+        self.queue_client_notification('load' + (':scroll_top' if scroll_top else ''), controller_path)
 
     def _client_notification_iterator(self):
         while len(self._notification_queue):

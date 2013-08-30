@@ -86,6 +86,21 @@ class TestBaseControllerFunctions(unittest.TestCase):
         self.assertEqual(self.root.view_state, self.view_state)
         self.assertEqual(child.view_state, self.view_state)
 
+    def test_nc_shortcut(self):
+        """Test that controller.nc returns the controller's ViewState's NotificationCentre"""
+        nc = MagicMock()
+        self.view_state.notification_centre = nc
+        self.assertEqual(nc, self.root.nc)
+
+    def test_queue_load(self):
+        """Test that the queue_load shortcut calls queue_load on the controller's ViewState's NotificationCentre"""
+        nc = MagicMock()
+        self.view_state.notification_centre = nc
+        self.root.queue_load()
+        nc.queue_load.assert_called_with(self.root.path, False)
+        self.root.queue_load(True)
+        nc.queue_load.assert_called_with(self.root.path, True)
+
     def test_named_child_push(self):
         """After pushing a child to a named stack, it is then retrievable via child. The previous final controller on
         the stack should have its pre_detach and post_detach methods called."""

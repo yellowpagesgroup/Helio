@@ -172,3 +172,30 @@ class NotifcationCentreTests(unittest.TestCase):
         n.unsubscribe_from_notification('non-existant', 'not.a.real.path')
         n.subscribe_to_notification('real-notification', 'listener.path', 'a.real.path')
         n.unsubscribe_from_notification('real-notification', 'listener.path', 'not.a.real.path')
+
+    def test_queue_load_shortcut(self):
+        """Test that the queue_load shortcut queues a client load notification for the specified path."""
+        v = ViewState(MagicMock())
+        nc = NotificationCentre(v)
+
+        nc.queue_client_notification = MagicMock()
+        nc.queue_load('test.component')
+        nc.queue_client_notification.assert_called_with('test.component', 'load')
+
+    def test_queue_load_shortcut(self):
+        """Test that the queue_load shortcut queues a client load notification for the specified path."""
+        v = ViewState(MagicMock())
+        nc = NotificationCentre(v)
+
+        nc.queue_client_notification = MagicMock()
+        nc.queue_load('test.controller')
+        nc.queue_client_notification.assert_called_with('load', 'test.controller')
+
+    def test_queue_load_shortcut_with_scroll_top(self):
+        """Test that the queue_load shortcut queues a client load:scrolltop notification for the specified path."""
+        v = ViewState(MagicMock())
+        nc = NotificationCentre(v)
+
+        nc.queue_client_notification = MagicMock()
+        nc.queue_load('test.controller', scroll_top=True)
+        nc.queue_client_notification.assert_called_with('load:scroll_top', 'test.controller')

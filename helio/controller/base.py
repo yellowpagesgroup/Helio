@@ -49,6 +49,10 @@ class BaseViewController(object):
     def view_state(self):
         return self.parent.view_state if self.parent else self._view_state
 
+    @property
+    def nc(self):
+        return self.view_state.notification_centre
+
     def make_root(self, view_state):
         self._view_state = view_state
         self.is_root = True
@@ -205,6 +209,10 @@ class BaseViewController(object):
         self.request = self.get_request(request)
 
         return render(self.template_name, self.context, self.request)
+
+    def queue_load(self, scroll_top=False):
+        """Shortcut for self.nc.queue_load(self.path)"""
+        self.nc.queue_load(self.path, scroll_top)
 
     # Controllers should override the following methods, as appropriate
 
