@@ -79,7 +79,7 @@ class NotificationCentre(object):
     def queue_client_notification(self, notification_name, component_path, data=None, force=False):
         """Queue a notification to be delivered to a specific component in the client. By default, the same notification
         (i.e. same name, path and data) won't be queued twice in a row, but will if force is True."""
-        notification = {'name': notification_name, 'path': component_path}
+        notification = {'name': notification_name, 'target': component_path}
         if data:
             notification['data'] = data
 

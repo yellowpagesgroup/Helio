@@ -124,8 +124,8 @@ class NotifcationCentreTests(unittest.TestCase):
         # notifications are retrieved FIFO
         queued_notifications = [notification for notification in n]
         self.assertEqual(len(queued_notifications), 2)
-        self.assertEqual({'name': 'test_name', 'path': 'page.test_component'}, queued_notifications[0])
-        self.assertEqual({'name': 'test_name2', 'path': 'page.test_component2', 'data': 'somedata'},
+        self.assertEqual({'name': 'test_name', 'target': 'page.test_component'}, queued_notifications[0])
+        self.assertEqual({'name': 'test_name2', 'target': 'page.test_component2', 'data': 'somedata'},
                          queued_notifications[1])
 
         # queue should now be empty
