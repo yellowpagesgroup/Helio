@@ -5,6 +5,7 @@ try:
     settings.configure()
     from finders import ComponentStaticFinder, ComponentTemplateLoader, walk_component_base_dir
     from renderers import render, RequestContext, get_request_context
+    from middleware import CSRFHeaderInject
 
     class StaticFinderTests(unittest.TestCase):
         def setUp(self):
@@ -152,6 +153,27 @@ try:
             context = MagicMock()
             render('template_name.html', context)
             mock_render.assert_called_with('template_name.html', context)
+
+    class MiddlewareTests(unittest.TestCase):
+        @patch('helio.heliodjango.middleware.settings.CSRF_COOKIE_NAME', 'csrftoken')
+        @patch('helio.heliodjango.middleware.csrf', return_value={'csrf_token': 'csrf-token'})
+        def test_csrf_inject(self, mock_csrf):
+            """Normally the CSRF value will be set on a response."""
+            mw = CSRFHeaderInject()
+            request = MagicMock()
+            response = MagicMock()
+            mw.process_response(request, response)
+            response.set_cookie.assert_called_with('csrftoken', 'csrf-token', max_age=31449600)
+
+        @patch('helio.heliodjango.middleware.settings.CSRF_COOKIE_NAME', 'csrftoken')
+        @patch('helio.heliodjango.middleware.csrf', return_value={'csrf_token': 'NOTPROVIDED'})
+        def test_csrf_no_inject(self, mock_csrf):
+            """If CSRF token is 'NOTPROVIDED' it will not be set on the response."""
+            mw = CSRFHeaderInject()
+            request = MagicMock()
+            response = MagicMock()
+            mw.process_response(request, response)
+            response.set_cookie.assert_not_called()
 
 
 except ImportError:
