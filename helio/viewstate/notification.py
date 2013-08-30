@@ -80,7 +80,7 @@ class NotificationCentre(object):
         """Queue a notification to be delivered to a specific component in the client. By default, the same notification
         (i.e. same name, path and data) won't be queued twice in a row, but will if force is True."""
         notification = {'name': notification_name, 'target': controller_path}
-        if data:
+        if data is not None:
             notification['data'] = data
 
         if not force and len(self._notification_queue) and self._notification_queue[-1] == notification:

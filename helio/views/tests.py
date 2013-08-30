@@ -64,7 +64,7 @@ class ProcessNotificationTests(MockedControllerTest):
         notification_data = {'data': ['some', 'data']}
         notification_centre = MagicMock()
         self.mock_vs.notification_centre = notification_centre
-        notifications = ['message1', 'message2']
+        notifications = [{'name': 'message1'}, {'name': 'message2'}]
         notification_centre.__iter__ = MagicMock(return_value=iter(notifications))
         self.mock_controller.handle_notification = MagicMock()
         queued_notifications = dispatch_notification('controller.path', 'vs_id', 'notification-name', notification_data,
@@ -74,3 +74,25 @@ class ProcessNotificationTests(MockedControllerTest):
         self.mock_controller.handle_notification.assert_called_with('notification-name', notification_data, 'request')
         self.assertEqual(queued_notifications, notifications)
 
+    def test_controller_data_added_on_load(self, mock_init):
+        """On a load notification the NotificationCentre gets the target controller that is to be loaded and bundles its
+        data into the request, unless it has data already."""
+        notifications = [{'name': 'load:scroll_top', 'target': 'test'}, {'name': 'load', 'target': 'test'},
+                         {'name': 'load:scroll_top', 'target': 'test', 'data': 'existing'},
+                         {'name': 'load', 'target': 'test', 'data': ''}]
+
+        notification_centre = MagicMock()
+        self.mock_vs.notification_centre = notification_centre
+        notification_centre.__iter__ = MagicMock(return_value=iter(notifications))
+        mock_controller = MagicMock()
+        mock_controller.render = MagicMock(return_value='html')
+        mock_controller.class_map_tree = MagicMock(return_value='class_map')
+        self.mock_vs.controller_from_path = MagicMock(return_value=mock_controller)
+        queued_notifications = dispatch_notification('controller.path', 'vs_id', 'notification-name', {},
+                                                    self.session, 'request')
+
+        self.assertEqual(len(queued_notifications), 4)
+        self.assertEqual(queued_notifications[0]['data'], {'html': 'html', 'class_map': 'class_map'})
+        self.assertEqual(queued_notifications[1]['data'], {'html': 'html', 'class_map': 'class_map'})
+        self.assertEqual(queued_notifications[2]['data'], 'existing')
+        self.assertEqual(queued_notifications[3]['data'], '')
