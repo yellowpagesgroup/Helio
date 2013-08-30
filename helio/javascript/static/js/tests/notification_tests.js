@@ -15,6 +15,15 @@ describe("NotifcationCentre helpers", function(){
         buildNotificationURL('the.path', 'thetype');
         expect(mockNotificationURLBuilder).toHaveBeenCalledWith('the.path', 'thetype');
     });
+
+    it("postNotification shortcut should call postNotification on the shared notificationCentre (g_helioNotificationCentre)", function(){
+        window.g_helioNotificationCentre = {
+            postNotification: jasmine.createSpy()
+        };
+
+        postNotification('targetPath', 'notificationName', 'notificationData', 'force', 'uncritical');
+        expect(window.g_helioNotificationCentre.postNotification).toHaveBeenCalledWith('targetPath', 'notificationName', 'notificationData', 'force', 'uncritical');
+    });
 });
 
 describe("NotificationCentre", function(){

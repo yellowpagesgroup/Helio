@@ -12,6 +12,9 @@ var buildNotificationURL = function(targetPath, notificationName){
     return notificationURL;
 }
 
+var postNotification = function(targetPath, notificationName, notificationData, force, uncritical){
+    window.g_helioNotificationCentre.postNotification(targetPath, notificationName, notificationData, force, uncritical);
+}
 
 var NotificationCentre = klass(function(){
     this.notifications = [];
