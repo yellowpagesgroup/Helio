@@ -16,22 +16,22 @@ def get_view_state(vs_id, session):
     return session[VIEWSTATE_MANAGER_SESSION_KEY].get_view_state(vs_id)
 
 
-def get_controller_data(path, vs_id, session, request=None):
+def get_controller_data(path, vs_id, session, request=None, **kwargs):
     controller, _ = _get_controller_and_view_state_from_session(path, vs_id, session)
-    html = controller.render(request=request)
+    html = controller.render(request=request, **kwargs)
     class_map = controller.class_map_tree({})
 
     return {'html': html, 'class_map': class_map}
 
 
-def dispatch_notification(path, vs_id, name, data, session, request=None):
+def dispatch_notification(path, vs_id, name, data, session, request=None, **kwargs):
     controller, vs = _get_controller_and_view_state_from_session(path, vs_id, session)
-    controller.handle_notification(name, data, request)
+    controller.handle_notification(name, data, request, **kwargs)
     client_notifications = []
     for client_notification in [notification for notification in vs.notification_centre]:
         if client_notification['name'].split(':')[0] == 'load' and client_notification.get('data') is None:
             controller = vs.controller_from_path(client_notification['target'])
-            html = controller.render(request=request)
+            html = controller.render(request=request, **kwargs)
             class_map = controller.class_map_tree({})
             client_notification['data'] = {'html': html, 'class_map': class_map}
 

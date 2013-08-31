@@ -2,12 +2,12 @@ from helio.settings import TEMPLATE_RENDERER
 from helio.helio_exceptions import UnattachedControllerError
 
 
-def render(template_name, context, request):
+def render(template_name, context, request, **kwargs):
     split_renderer_module = TEMPLATE_RENDERER.split('.')
     render_function_name = split_renderer_module[-1]
     render_module = __import__('.'.join(split_renderer_module[:-1]), globals(), locals(), split_renderer_module[-1])
     render_func = getattr(render_module, render_function_name)
-    return render_func(template_name, context, request)
+    return render_func(template_name, context, request, **kwargs)
 
 
 class BaseViewController(object):
@@ -202,13 +202,13 @@ class BaseViewController(object):
         self._context_insert_children()
         self.context_setup()
 
-    def render(self, context=None, request=None):
+    def render(self, context=None, request=None, **kwargs):
         self._context_setup()
         if context is not None:
             self.context.update(context)
         self.request = self.get_request(request)
 
-        return render(self.template_name, self.context, self.request)
+        return render(self.template_name, self.context, self.request, **kwargs)
 
     def queue_load(self, scroll_top=False):
         """Shortcut for self.nc.queue_load(self.path)"""

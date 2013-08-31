@@ -258,6 +258,19 @@ class TestBaseControllerFunctions(unittest.TestCase):
         mock_render.assert_called_with('mock_template.html', mock_context, mock_request)
 
     @patch('helio.controller.base.render')
+    def test_controller_render_kwargs(self, mock_render):
+        """The controller render method should call the standalone render method with the kwargs provided"""
+        self.root.template_name = 'mock_template.html'
+        child_one = BaseViewController()
+        self.root.set_child('one', child_one)
+        mock_context = {'test': 'mockval', 'one': 'test_one'}
+        mock_request = MagicMock()
+        self.root.render(mock_context, mock_request, environment='env', other_arg='arg')
+        mock_render.assert_called_with('mock_template.html', mock_context, mock_request,  environment='env',
+                                       other_arg='arg')
+
+
+    @patch('helio.controller.base.render')
     def test_child_controller_context_add(self, mock_render):
         """The controller should insert child components into the context."""
         self.root.template_name = 'mock_template.html'
@@ -269,17 +282,20 @@ class TestBaseControllerFunctions(unittest.TestCase):
         mock_render.assert_called_with('mock_template.html', {'test': 'mockval', 'one': child_one}, mock_request)
 
     @patch('helio.controller.base.TEMPLATE_RENDERER', 'mock.module.render')
-    def test_render_import(self):
+    def test_render_wrapper_import_call(self):
+        """The render function should be imported based on the TEMPLATE_RENDERER setting, then called with the args &&
+        kwargs."""
         mock_render_func = MagicMock()
         mock_module = MagicMock()
         mock_module.render = mock_render_func
 
         with patch('__builtin__.__import__', return_value=mock_module) as mock_import:
-            render('template.html', 'context', 'request')
+            render('template.html', 'context', 'request', environment='environment', other_arg='other_arg')
 
             self.assertEqual('mock.module', mock_import.call_args[0][0])
             self.assertEqual('render', mock_import.call_args[0][3])
-            mock_module.render.assert_called_with('template.html', 'context', 'request')
+            mock_module.render.assert_called_with('template.html', 'context', 'request', environment='environment',
+                                                  other_arg='other_arg')
 
 
 if __name__ == '__main__':
