@@ -10,7 +10,6 @@ class ComponentTemplateLoader(BaseLoader):
     def get_source(self, environment, template):
         for base_dir in self.base_dirs:
             full_path = join(base_dir, component_template_to_path(template))
-            print full_path
             if exists(full_path):
                 mtime = getmtime(full_path)
                 with file(full_path) as f:
