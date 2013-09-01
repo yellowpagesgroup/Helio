@@ -297,6 +297,32 @@ class TestBaseControllerFunctions(unittest.TestCase):
             mock_module.render.assert_called_with('template.html', 'context', 'request', environment='environment',
                                                   other_arg='other_arg')
 
+    @patch('helio.controller.base.render')
+    def test_parent_renderargs_get(self, mock_render):
+        """A controller uses its parent's render args as a starting point, updating them with the incoming kwargs before
+        passing to the render func."""
+        self.root.template_name = 'mock_template.html'
+        child_one = BaseViewController()
+        child_one.template_name = 'template_name'
+        self.root.set_child('one', child_one)
+        self.root._render_args = {'parent_arg': 'arg_one'}
+        child_one.render({}, 'request', test_arg='an_arg')
+        mock_render.assert_called_with('template_name', {}, 'request', parent_arg='arg_one', test_arg='an_arg')
+
+    def test_getstate(self):
+        """The controller's __getstate__ method sets request and context to None as these cannot reliably be pickled."""
+        self.root.context = 'context'
+        self.root.request = 'request'
+        serialize_data = self.root.__getstate__()
+        self.assertIsNone(serialize_data['request'])
+        self.assertIsNone(serialize_data['context'])
+
+    def test_unicode(self):
+        """The __unicode__ method should call render with no args."""
+        self.root.render = MagicMock()
+        self.root.__unicode__()
+        self.root.render.assert_called_with()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -21,12 +21,19 @@ class BaseViewController(object):
     def __init__(self):
         self._children = {}
         self._view_state = None
+        self._render_args = {}
         self.context = None
         self.request = None
 
         self._local_id = None
         self.parent = None
         self.is_root = False
+
+    def __getstate__(self):
+        self.request = None
+        self.context = None
+        self._render_args = {}
+        return self.__dict__
 
     @property
     def local_id(self):
@@ -207,8 +214,15 @@ class BaseViewController(object):
         if context is not None:
             self.context.update(context)
         self.request = self.get_request(request)
+        if self.parent:
+            self._render_args = self.parent._render_args
 
-        return render(self.template_name, self.context, self.request, **kwargs)
+        self._render_args.update(kwargs)
+
+        return render(self.template_name, self.context, self.request, **self._render_args)
+
+    def __unicode__(self):
+        return self.render()
 
     def queue_load(self, scroll_top=False):
         """Shortcut for self.nc.queue_load(self.path)"""
@@ -216,7 +230,7 @@ class BaseViewController(object):
 
     # Controllers should override the following methods, as appropriate
 
-    def handle_notification(self, notification_name, data, request):
+    def handle_notification(self, notification_name, data, request, **kwargs):
         pass
 
     def context_setup(self):

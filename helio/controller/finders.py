@@ -14,3 +14,14 @@ def component_template_to_path(template_name):
     component_dir = component_name.replace('.', '/')
 
     return join(component_dir, final_template_name)
+
+
+def component_static_to_path(static_file):
+    split_path = static_file.split('/')
+
+    if len(split_path) < 2:
+        return None
+
+    component_dir = '/'.join(split_path[:-1])
+
+    return join(component_dir, 'static', split_path[-1])

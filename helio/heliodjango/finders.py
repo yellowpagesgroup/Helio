@@ -1,9 +1,10 @@
 import re
 from os import walk
-from os.path import join, exists, basename, splitext
+from os.path import join, exists, basename
 from django.core.files.storage import FileSystemStorage
 from django.contrib.staticfiles.finders import BaseFinder
 from django.template.loaders.filesystem import Loader
+from helio.controller.finders import component_template_to_path, component_static_to_path
 from helio.settings import COMPONENT_BASE_DIRECTORIES
 
 
@@ -26,17 +27,15 @@ class ComponentStaticFinder(BaseFinder):
         self.component_base_directories = COMPONENT_BASE_DIRECTORIES
 
     def find(self, path, all=False):
-        split_path = path.split('/')
+        static_path = component_static_to_path(path)
 
-        if len(split_path) < 2:
+        if static_path is None:
             return
-
-        component_dir = '/'.join(split_path[:-1])
 
         all_components = []
 
         for component_base_dir in self.component_base_directories:
-            full_path = join(component_base_dir, component_dir, 'static', split_path[-1])
+            full_path = join(component_base_dir, static_path)
             if exists(full_path):
                 if all:
                     all_components.append(full_path)
@@ -83,16 +82,5 @@ class ComponentTemplateLoader(Loader):
         self.component_base_directories = COMPONENT_BASE_DIRECTORIES
 
     def get_template_sources(self, template_name, template_dirs=None):
-        split_template_name = template_name.split('/')
-
-        if len(split_template_name) == 1:
-            component_name, ext = splitext(split_template_name[-1])
-            final_template_name = component_name.split('.')[-1] + ext
-        else:
-            component_name = split_template_name[0]
-            final_template_name = '/'.join(split_template_name[1:])
-
-        component_dir = component_name.replace('.', '/')
-
         for component_base_dir in self.component_base_directories:
-            yield join(component_base_dir, component_dir, final_template_name)
+            yield join(component_base_dir, component_template_to_path(template_name))
