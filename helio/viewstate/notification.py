@@ -2,7 +2,7 @@ from viewstate import ViewState
 
 
 class NotificationCentre(object):
-    """NotificationCentre is used to send notifications between components,
+    """NotificationCentre is used to send notifications between controllers,
     and to queue notifications for the client."""
     def __init__(self, view_state):
         if not isinstance(view_state, ViewState):
@@ -18,51 +18,51 @@ class NotificationCentre(object):
     def view_state(self):
         return self._view_state
 
-    def subscribe_to_notification(self, notification_name, component_path, source_component_path='__global__'):
+    def subscribe_to_notification(self, notification_name, controller_path, source_controller_path='__global__'):
         if not notification_name in self._notification_listeners:
             self._notification_listeners[notification_name] = {}
 
-        if not source_component_path in self._notification_listeners[notification_name]:
-            self._notification_listeners[notification_name][source_component_path] = set()
+        if not source_controller_path in self._notification_listeners[notification_name]:
+            self._notification_listeners[notification_name][source_controller_path] = set()
 
-        self._notification_listeners[notification_name][source_component_path].add(component_path)
+        self._notification_listeners[notification_name][source_controller_path].add(controller_path)
 
-    def post_notification(self, notification_name, source_component_path='__global__', data=None):
+    def post_notification(self, notification_name, source_controller_path='__global__', data=None):
         if not notification_name in self._notification_listeners:
             return
 
-        listeners = self._notification_listeners[notification_name].get(source_component_path, set())
+        listeners = self._notification_listeners[notification_name].get(source_controller_path, set())
 
         # always send to global listeners even if a path provided
-        if source_component_path != '__global__' and '__global__' in self._notification_listeners[notification_name]:
+        if source_controller_path != '__global__' and '__global__' in self._notification_listeners[notification_name]:
             listeners.update(self._notification_listeners[notification_name]['__global__'])
 
-        for component_path in list(listeners):
-            component = self.view_state.component_from_path(component_path)
+        for controller_path in list(listeners):
+            controller = self.view_state.controller_from_path(controller_path)
 
-            if component is None:
+            if controller is None:
                 continue
 
-            component.handle_notification(notification_name, data)
+            controller.handle_notification(notification_name, data)
 
-    def unsubscribe_from_notification(self, notification_name, component_path, source_component_path='__global__'):
+    def unsubscribe_from_notification(self, notification_name, controller_path, source_controller_path='__global__'):
         if not notification_name in self._notification_listeners:
             return
 
-        if not source_component_path in self._notification_listeners[notification_name]:
+        if not source_controller_path in self._notification_listeners[notification_name]:
             return
 
-        self._notification_listeners[notification_name][source_component_path].discard(component_path)
+        self._notification_listeners[notification_name][source_controller_path].discard(controller_path)
 
-    def unsubscribe_from_all_notifications(self, component_path):
-        """Unsubscribe a component from all listeners, useful when a component is going to be taken off the VS tree."""
+    def unsubscribe_from_all_notifications(self, controller_path):
+        """Unsubscribe a controller from all listeners, useful when a controller is going to be taken off the VS tree."""
         notifications_to_remove = []
 
         for notification_name, sources in self._notification_listeners.iteritems():
             sources_to_remove = []
 
             for source_path, listeners in sources.iteritems():
-                listeners.discard(component_path)
+                listeners.discard(controller_path)
 
                 if len(listeners) == 0:
                     sources_to_remove.append(source_path)
@@ -77,7 +77,7 @@ class NotificationCentre(object):
             del self._notification_listeners[notification_name]
 
     def queue_client_notification(self, notification_name, controller_path, data=None, force=False):
-        """Queue a notification to be delivered to a specific component in the client. By default, the same notification
+        """Queue a notification to be delivered to a specific controller in the client. By default, the same notification
         (i.e. same name, path and data) won't be queued twice in a row, but will if force is True."""
         notification = {'name': notification_name, 'target': controller_path}
         if data is not None:

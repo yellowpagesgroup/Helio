@@ -63,7 +63,6 @@ class BaseViewController(object):
     def make_root(self, view_state):
         self._view_state = view_state
         self.is_root = True
-        self._post_attach()
 
     def attach(self, parent, local_id):
         self.parent = parent
@@ -230,7 +229,7 @@ class BaseViewController(object):
 
     # Controllers should override the following methods, as appropriate
 
-    def handle_notification(self, notification_name, data, request, **kwargs):
+    def handle_notification(self, notification_name, data, request=None, **kwargs):
         pass
 
     def context_setup(self):

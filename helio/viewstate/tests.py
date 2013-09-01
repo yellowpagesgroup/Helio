@@ -21,13 +21,15 @@ class TestViewStateFunctions(unittest.TestCase):
     @patch('helio.viewstate.viewstate.DEFAULT_ROOT_COMPONENT', 'root-component')
     def test_default_viewstate_default_controller(self):
         """get_default_viewstate should instantiate the controller defined in the DEFAULT_ROOT_COMPONENT setting."""
-        mock_controller = MagicMock()
+        mock_controller = BaseViewController()
         with patch('helio.viewstate.viewstate.init_controller', return_value=mock_controller) as mock_init:
+            mock_controller.post_attach = MagicMock()
             vs = get_default_viewstate()
             mock_init.assert_called_with('root-component')
             self.assertEqual(vs.root_controller, mock_controller)
             self.assertIsInstance(vs, ViewState)
             self.assertTrue(hasattr(vs, 'notification_centre'))
+            mock_controller.post_attach.assert_called_with()
 
 
 class TestViewStateClass(unittest.TestCase):
@@ -118,6 +120,16 @@ class TestViewStateClass(unittest.TestCase):
     def test_page_pop_fails(self):
         """ValueError is raised when trying to pop the root (page)."""
         self.assertRaises(ValueError, self.vs.pop_controller, 'page')
+
+    def test_post_setup_root_attach(self):
+        """The root's post_attach method should not be called until VS's post_setup is called so that the NC has
+        been able to be set up and everything has a path."""
+        root_controller = BaseViewController()
+        root_controller.post_attach = MagicMock()
+        vs = ViewState(root_controller)
+        root_controller.post_attach.assert_not_called()
+        vs.post_setup()
+        root_controller.post_attach.assert_called_with()
 
 
 @patch('helio.viewstate.viewstate.init_controller', return_value=MagicMock())

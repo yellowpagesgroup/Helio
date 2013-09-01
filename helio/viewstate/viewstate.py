@@ -33,6 +33,9 @@ class ViewState(object):
 
         return controller
 
+    def post_setup(self):
+        self.root_controller._post_attach()
+
     def _add_controller_to_parent(self, parent_controller, controller, child_key, is_push):
         if is_push:
             parent_controller.push_child(child_key, controller)
@@ -114,4 +117,5 @@ def get_default_viewstate():
     root = init_controller(DEFAULT_ROOT_COMPONENT)
     vs = ViewState(root)
     NotificationCentre(vs)
+    vs.post_setup()
     return vs

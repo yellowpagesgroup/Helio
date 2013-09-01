@@ -38,43 +38,43 @@ class NotifcationCentreTests(unittest.TestCase):
         self.assertEqual(v.notification_centre, n)
 
     def test_global_notification_subscription_and_receive(self):
-        """A component that subscribes to a notification with a blank source, should receive that notification no matter
+        """A controller that subscribes to a notification with a blank source, should receive that notification no matter
         what source posts it."""
         v = ViewState(MagicMock())
         n = NotificationCentre(v)
-        component = MagicMock()
-        v.component_from_path = MagicMock(return_value=component)
+        controller = MagicMock()
+        v.controller_from_path = MagicMock(return_value=controller)
 
-        n.subscribe_to_notification('test_notification', 'page.test_component')
+        n.subscribe_to_notification('test_notification', 'page.test_controller')
         n.post_notification('test_notification')
-        component.handle_notification.assert_called_with('test_notification', None)
+        controller.handle_notification.assert_called_with('test_notification', None)
 
-        n.subscribe_to_notification('test_notification2', 'page.test_component')
-        n.post_notification('test_notification2', 'page.another_component')
-        component.handle_notification.assert_called_with('test_notification2', None)
+        n.subscribe_to_notification('test_notification2', 'page.test_controller')
+        n.post_notification('test_notification2', 'page.another_controller')
+        controller.handle_notification.assert_called_with('test_notification2', None)
 
     def test_specific_notification_subscription_and_receive(self):
-        """A component can listen to events from only single sources, so shouldn't receive that notification if posted
+        """A controller can listen to events from only single sources, so shouldn't receive that notification if posted
         from elsewhere."""
         v = ViewState(MagicMock())
         n = NotificationCentre(v)
-        component = MagicMock()
-        v.component_from_path = MagicMock(return_value=component)
+        controller = MagicMock()
+        v.controller_from_path = MagicMock(return_value=controller)
 
-        n.subscribe_to_notification('test_notification', 'page.test_component', 'page.source_component')
+        n.subscribe_to_notification('test_notification', 'page.test_controller', 'page.source_controller')
         n.post_notification('test_notification')
         n.post_notification('test_notification', 'page.another_source')
-        self.assertEqual(component.handle_notification.call_count, 0)
+        self.assertEqual(controller.handle_notification.call_count, 0)
 
-        n.post_notification('test_notification', 'page.source_component')
-        component.handle_notification.assert_called_with('test_notification', None)
+        n.post_notification('test_notification', 'page.source_controller')
+        controller.handle_notification.assert_called_with('test_notification', None)
 
-    def test_missing_component_no_exception(self):
-        """If a component no longer exists at the path to receive the notification, no error should occur."""
+    def test_missing_controller_no_exception(self):
+        """If a controller no longer exists at the path to receive the notification, no error should occur."""
         v = ViewState(MagicMock())
         n = NotificationCentre(v)
-        v.component_from_path = MagicMock(return_value=None)
-        n.subscribe_to_notification('test_notification', 'page.test_component')
+        v.controller_from_path = MagicMock(return_value=None)
+        n.subscribe_to_notification('test_notification', 'page.test_controller')
         n.post_notification('test_notification')
 
     def test_no_listeners_no_exception(self):
@@ -84,48 +84,48 @@ class NotifcationCentreTests(unittest.TestCase):
         n.post_notification('test_notification')
 
     def test_notification_unsubscribe(self):
-        """After a component unsubscribes, it should not receive that notification any more (but should still receive
+        """After a controller unsubscribes, it should not receive that notification any more (but should still receive
         others that it is subscribed to)."""
         v = ViewState(MagicMock())
         n = NotificationCentre(v)
-        component = MagicMock()
-        v.component_from_path = MagicMock(return_value=component)
+        controller = MagicMock()
+        v.controller_from_path = MagicMock(return_value=controller)
 
-        n.subscribe_to_notification('test_notification', 'page.test_component')
-        n.subscribe_to_notification('test_notification2', 'page.test_component')
-        n.unsubscribe_from_notification('test_notification', 'page.test_component')
+        n.subscribe_to_notification('test_notification', 'page.test_controller')
+        n.subscribe_to_notification('test_notification2', 'page.test_controller')
+        n.unsubscribe_from_notification('test_notification', 'page.test_controller')
         n.post_notification('test_notification')
-        self.assertEqual(component.handle_notification.call_count, 0)
+        self.assertEqual(controller.handle_notification.call_count, 0)
         n.post_notification('test_notification2')
-        component.handle_notification.assert_called_with('test_notification2', None)
+        controller.handle_notification.assert_called_with('test_notification2', None)
 
     def test_notification_unsubscribe_all(self):
-        """nc.unsubscribe_from_all_notifications should prevent any more calls going to the component."""
+        """nc.unsubscribe_from_all_notifications should prevent any more calls going to the controller."""
         v = ViewState(MagicMock())
         n = NotificationCentre(v)
-        component = MagicMock()
-        v.component_from_path = MagicMock(return_value=component)
+        controller = MagicMock()
+        v.controller_from_path = MagicMock(return_value=controller)
 
-        n.subscribe_to_notification('test_notification', 'page.test_component')
-        n.subscribe_to_notification('test_notification2', 'page.test_component')
-        n.unsubscribe_from_all_notifications('page.test_component')
+        n.subscribe_to_notification('test_notification', 'page.test_controller')
+        n.subscribe_to_notification('test_notification2', 'page.test_controller')
+        n.unsubscribe_from_all_notifications('page.test_controller')
         n.post_notification('test_notification')
         n.post_notification('test_notification2')
-        self.assertEqual(component.handle_notification.call_count, 0)
+        self.assertEqual(controller.handle_notification.call_count, 0)
 
     def test_client_notification_queue_and_retrieve(self):
         """Client notifications are queued and retrieved in FIFO order."""
         v = ViewState(MagicMock())
         n = NotificationCentre(v)
 
-        n.queue_client_notification('test_name', 'page.test_component')
-        n.queue_client_notification('test_name2', 'page.test_component2', 'somedata')
+        n.queue_client_notification('test_name', 'page.test_controller')
+        n.queue_client_notification('test_name2', 'page.test_controller2', 'somedata')
 
         # notifications are retrieved FIFO
         queued_notifications = [notification for notification in n]
         self.assertEqual(len(queued_notifications), 2)
-        self.assertEqual({'name': 'test_name', 'target': 'page.test_component'}, queued_notifications[0])
-        self.assertEqual({'name': 'test_name2', 'target': 'page.test_component2', 'data': 'somedata'},
+        self.assertEqual({'name': 'test_name', 'target': 'page.test_controller'}, queued_notifications[0])
+        self.assertEqual({'name': 'test_name2', 'target': 'page.test_controller2', 'data': 'somedata'},
                          queued_notifications[1])
 
         # queue should now be empty
@@ -136,20 +136,20 @@ class NotifcationCentreTests(unittest.TestCase):
         v = ViewState(MagicMock())
         n = NotificationCentre(v)
 
-        n.queue_client_notification('test_name', 'page.test_component')
-        n.queue_client_notification('test_name', 'page.test_component')
+        n.queue_client_notification('test_name', 'page.test_controller')
+        n.queue_client_notification('test_name', 'page.test_controller')
         self.assertEqual(len([notification for notification in n]), 1)
 
-        n.queue_client_notification('test_name', 'page.test_component')
-        n.queue_client_notification('test_name', 'page.test_component', 'somedata')
+        n.queue_client_notification('test_name', 'page.test_controller')
+        n.queue_client_notification('test_name', 'page.test_controller', 'somedata')
         self.assertEqual(len([notification for notification in n]), 2)
 
-        n.queue_client_notification('test_name', 'page.test_component2')
-        n.queue_client_notification('test_name', 'page.test_component')
+        n.queue_client_notification('test_name', 'page.test_controller2')
+        n.queue_client_notification('test_name', 'page.test_controller')
         self.assertEqual(len([notification for notification in n]), 2)
 
-        n.queue_client_notification('test_name', 'page.test_component')
-        n.queue_client_notification('test_name2', 'page.test_component')
+        n.queue_client_notification('test_name', 'page.test_controller')
+        n.queue_client_notification('test_name2', 'page.test_controller')
         self.assertEqual(len([notification for notification in n]), 2)
 
     def test_force_same_notification_multiple_queue(self):
@@ -157,14 +157,14 @@ class NotifcationCentreTests(unittest.TestCase):
         v = ViewState(MagicMock())
         n = NotificationCentre(v)
 
-        n.queue_client_notification('test_name', 'page.test_component')
-        n.queue_client_notification('test_name', 'page.test_component', force=True)
+        n.queue_client_notification('test_name', 'page.test_controller')
+        n.queue_client_notification('test_name', 'page.test_controller', force=True)
         queued_notifications = [notification for notification in n]
         self.assertEqual(len(queued_notifications), 2)
         self.assertEqual(queued_notifications[0], queued_notifications[1])
 
     def test_unsubscribe_non_existant_without_error(self):
-        """Test that unsubscribing from a notification that isn't being listened to, and from a component that hasn't
+        """Test that unsubscribing from a notification that isn't being listened to, and from a controller that hasn't
         been subscribed to, doesn't raise an error."""
         v = ViewState(MagicMock())
         n = NotificationCentre(v)
@@ -179,8 +179,8 @@ class NotifcationCentreTests(unittest.TestCase):
         nc = NotificationCentre(v)
 
         nc.queue_client_notification = MagicMock()
-        nc.queue_load('test.component')
-        nc.queue_client_notification.assert_called_with('test.component', 'load')
+        nc.queue_load('test.controller')
+        nc.queue_client_notification.assert_called_with('test.controller', 'load')
 
     def test_queue_load_shortcut(self):
         """Test that the queue_load shortcut queues a client load notification for the specified path."""
