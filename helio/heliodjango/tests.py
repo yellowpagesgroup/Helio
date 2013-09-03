@@ -3,7 +3,7 @@ try:
     from mock import patch, MagicMock
     from django.conf import settings
     settings.configure()
-    from finders import ComponentStaticFinder, ComponentTemplateLoader, walk_component_base_dir
+    from finders import ComponentStaticFinder, ComponentTemplateLoader, walk_component_base_dir, helio_static_path
     from renderers import render, RequestContext, get_request_context
     from middleware import CSRFHeaderInject
 
@@ -13,7 +13,8 @@ try:
             self.finder.component_base_directories = ('MOCK_BASE_DIR', 'MOCK_BASE_DIR_2')
 
         @patch('helio.heliodjango.finders.exists', return_value=True)
-        def test_single_get(self, mock_exists):
+        @patch('helio.heliodjango.finders.helio_static_path', return_value=None)
+        def test_single_get(self, mock_helio_finder, mock_exists):
             """Static finder converts path in the form path/to/component/component.ext to filesystem path
             <COMPONENTDIR>/path/to/component/static/component.ext."""
             static_path = self.finder.find('path/to/component/component.ext')
@@ -26,7 +27,8 @@ try:
             self.assertEqual(static_path, ())
 
         @patch('helio.heliodjango.finders.exists', return_value=True)
-        def test_get_all(self, mock_exists):
+        @patch('helio.heliodjango.finders.helio_static_path', return_value=None)
+        def test_get_all(self, mock_helio_finder, mock_exists):
             """With get all argument, all the existing files are returned."""
             static_path = self.finder.find('path/to/component/component.ext', all=True)
             self.assertEqual(static_path, ['MOCK_BASE_DIR/path/to/component/static/component.ext',
@@ -79,7 +81,8 @@ try:
             ('/component_name/sub_component/', [], ('anotherfile.ext',)),
             ('/component_name/sub_component/static/', [], ('file2.js', 'file3.css', 'ignore.me')))
         )
-        def test_component_static_list(self, mock_walk):
+        @patch('helio.heliodjango.finders.listdir', return_value=[])
+        def test_component_static_list(self, mock_helio_finder, mock_walk):
             """The list function should skip directories that aren't 'static' dirs, and files that match the ignore
             list."""
             self.finder.component_base_directories = ('MOCK_BASE_DIR',)
@@ -93,6 +96,38 @@ try:
             self.assertEqual(static_files[0][0], 'file.js')
             self.assertEqual(static_files[1][0], 'file2.js')
             self.assertEqual(static_files[2][0], 'file3.css')
+
+        @patch('helio.heliodjango.finders.exists', return_value=True)
+        @patch('helio.heliodjango.finders.join', return_value='path/to/file.js')
+        @patch('helio.heliodjango.finders.isdir', return_value=False)
+        def test_helio_static_path_get(self, mock_is_dir, mock_join, mock_exists):
+            """helio_static_path should join the helio static path to the file name and return it if it exists."""
+            joined_name = helio_static_path('helio_dir', 'filename')
+            mock_join.assert_called_with('helio_dir', 'filename')
+            mock_is_dir.assert_called_with(joined_name)
+            mock_exists.assert_called_with(joined_name)
+            self.assertEqual(joined_name, 'path/to/file.js')
+
+        @patch('helio.heliodjango.finders.exists', return_value=False)
+        @patch('helio.heliodjango.finders.join', return_value='path/to/file.js')
+        def test_helio_static_path_nonexistent_get(self, mock_join, mock_exists):
+            """helio_static_path should join the helio static path to the file name and return None if it doesn't
+            exist."""
+            joined_name = helio_static_path('helio_dir', 'filename')
+            mock_join.assert_called_with('helio_dir', 'filename')
+            mock_exists.assert_called_with('path/to/file.js')
+            self.assertIsNone(joined_name)
+
+        @patch('helio.heliodjango.finders.exists', return_value=True)
+        @patch('helio.heliodjango.finders.join', return_value='path/to/file.js')
+        @patch('helio.heliodjango.finders.isdir', return_value=True)
+        def test_helio_static_path_dir_get(self, mock_is_dir, mock_join, mock_exists):
+            """helio_static_path should join the helio static path to the file name and return None if it is a dir."""
+            joined_name = helio_static_path('helio_dir', 'filename')
+            mock_join.assert_called_with('helio_dir', 'filename')
+            mock_is_dir.assert_called_with('path/to/file.js')
+            mock_exists.assert_called_with('path/to/file.js')
+            self.assertIsNone(joined_name)
 
     class TemplateLoaderTests(unittest.TestCase):
         def setUp(self):
