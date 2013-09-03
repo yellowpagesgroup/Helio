@@ -1,6 +1,7 @@
+import unittest
+from mock import patch, MagicMock
+
 try:
-    import unittest
-    from mock import patch, MagicMock
     from django.conf import settings
     settings.configure()
     from finders import ComponentStaticFinder, ComponentTemplateLoader, walk_component_base_dir, helio_static_path
