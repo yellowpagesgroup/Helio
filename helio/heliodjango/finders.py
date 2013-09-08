@@ -35,8 +35,8 @@ class ComponentStaticFinder(BaseFinder):
     def __init__(self,):
         self.component_base_directories = COMPONENT_BASE_DIRECTORIES
         self.helio_static_dirs = (
-            join( dirname(abspath(helio.__file__)), 'javascript', 'static'),
-            join( dirname(abspath(helio.__file__)), 'heliodjango', 'static')
+            join(dirname(abspath(helio.__file__)), 'javascript', 'static'),
+            join(dirname(abspath(helio.__file__)), 'heliodjango', 'static')
         )
 
     def find(self, path, all=False):
