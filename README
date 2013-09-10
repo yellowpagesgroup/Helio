@@ -1,0 +1,4 @@
+Helio is a componentised, hierarchical, notification driven Python and 
+Javascript web framework.
+
+Currently it has built in support for Django and Flask.
