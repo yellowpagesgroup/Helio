@@ -46,7 +46,7 @@ try:
                 self.assertEqual(resp.data, '{"data": "somedata"}')
 
         @patch('helio.helioflask.helioflask.dispatch_notification', return_value={'notification': 'get busy'})
-        def test_get_controller_data_call(self, mock_dn):
+        def test_dispatch_notification_call(self, mock_dn):
             """Flask helio_dispatch_notification view should call dispatch_notification Helio view with the supplied
             controller path, vs_id, notification and data"""
             with self.app.test_request_context():
@@ -114,4 +114,4 @@ try:
                 mock_send_file.called_with('COMPONENT_DIR/file/static/file.js')
 
 except ImportError:
-    print "Not testing Flask integration."
+    raise RuntimeWarning("Not testing Flask integration.")

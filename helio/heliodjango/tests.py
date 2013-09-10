@@ -31,9 +31,31 @@ try:
         @patch('helio.heliodjango.finders.helio_static_path', return_value=None)
         def test_get_all(self, mock_helio_finder, mock_exists):
             """With get all argument, all the existing files are returned."""
-            static_path = self.finder.find('path/to/component/component.ext', all=True)
-            self.assertEqual(static_path, ['MOCK_BASE_DIR/path/to/component/static/component.ext',
+            static_paths = self.finder.find('path/to/component/component.ext', all=True)
+            self.assertEqual(static_paths, ['MOCK_BASE_DIR/path/to/component/static/component.ext',
                                            'MOCK_BASE_DIR_2/path/to/component/static/component.ext'])
+
+        @patch('helio.heliodjango.finders.component_static_to_path', return_value=None)
+        @patch('helio.heliodjango.finders.exists', return_value=True)
+        @patch('helio.heliodjango.finders.helio_static_path', return_value='helio/static.js')
+        def test_helio_staticdirs_get_all(self, mock_helio_finder, mock_exists, mock_csp):
+            """With get all argument, and when helio_static_dirs is defined, should return from the helio_static_dirs
+            first."""
+            self.finder.helio_static_dirs = ['/javascript']
+            self.finder.component_base_directories = []
+            static_paths = self.finder.find('path/to/component/component.ext', all=True)
+            mock_helio_finder.asert_called_with('/javascript', 'path/to/component/component.ext')
+            self.assertEqual(static_paths, ['helio/static.js'])
+
+        @patch('helio.heliodjango.finders.exists', return_value=True)
+        @patch('helio.heliodjango.finders.helio_static_path', return_value='helio/static.js')
+        def test_helio_staticdirs_get(self, mock_helio_finder, mock_exists):
+            """When helio_static_dirs is defined, should return from the helio_static_dirs first."""
+            self.finder.helio_static_dirs = ['/javascript']
+            self.finder.component_base_directories = []
+            static_path = self.finder.find('path/to/component/component.ext')
+            mock_helio_finder.asert_called_with('/javascript', 'path/to/component/component.ext')
+            self.assertEqual(static_path, 'helio/static.js')
 
         def test_invalid_path_get(self):
             """Getting a path with < 2 components (i.e. not valid for a controller, so no point looking for it)

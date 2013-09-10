@@ -23,4 +23,4 @@ try:
             self.assertEqual(resolution.func, helio_get_view_state)
 
 except ImportError:
-    print "Not testing Django URLs"
+    raise RuntimeWarning("Not testing Django URLs")

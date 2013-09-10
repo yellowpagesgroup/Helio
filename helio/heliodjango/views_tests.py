@@ -48,7 +48,7 @@ try:
             self.assertEqual(resp.content, '{"data": "somedata"}')
 
         @patch('helio.heliodjango.views.dispatch_notification', return_value={'notification': 'get busy'})
-        def test_get_controller_data_call(self, mock_dn):
+        def test_dispath_notifcation_call(self, mock_dn):
             """Django helio_dispatch_notification view should call dispatch_notification Helio view with the supplied
             controller path, vs_id, notification and data"""
             req = MockRequest()
@@ -59,4 +59,4 @@ try:
             self.assertEqual(resp.content, '{"notification": "get busy"}')
 
 except ImportError:
-    print "Not testing Django Views"
+    raise RuntimeWarning("Not testing Django Views")

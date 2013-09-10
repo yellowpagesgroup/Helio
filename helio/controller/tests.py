@@ -101,6 +101,10 @@ class TestBaseControllerFunctions(unittest.TestCase):
         self.root.queue_load(True)
         nc.queue_load.assert_called_with(self.root.path, True)
 
+    def test_handle_notification(self):
+        """Base Controller should implement handle_notification method."""
+        self.root.handle_notification('name', 'data', request=None, other_arg=None)
+
     def test_child_push(self):
         """After pushing a child to a stack, it is then retrievable via child. The previous final controller on
         the stack should have its pre_detach and post_detach methods called."""
