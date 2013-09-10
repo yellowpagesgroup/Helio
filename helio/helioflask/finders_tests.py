@@ -57,4 +57,4 @@ try:
                 loader.get_source(None, 'template.html')
 
 except ImportError:
-    print "Not testing Flask/Jinja2 Template Integration"
+    raise RuntimeWarning("Not testing Flask/Jinja2 Template Integration")
