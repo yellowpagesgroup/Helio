@@ -1,6 +1,6 @@
 import os
 from distutils.core import setup
-
+from helio import __version__ as helio_version
 
 def fullsplit(path, result=None):
     """
@@ -41,13 +41,13 @@ for dirpath, dirnames, filenames in os.walk('helio'):
 
 setup(
     name='helio',
-    version='1.0b1',
+    version=helio_version,
     packages=packages,
     package_data=package_data,
     url='https://github.com/yellowpagesgroup/Helio',
     author='Yellow Pages Group',
     author_email='ben.shaw@yellow.co.nz',
-    requires=[
+    install_requires=[
         'coverage',
         'mock',
         'nose',
