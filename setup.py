@@ -47,7 +47,7 @@ setup(
     url='https://github.com/yellowpagesgroup/Helio',
     author='Yellow Pages Group',
     author_email='ben.shaw@yellow.co.nz',
-    requires=[
+    install_requires=[
         'coverage',
         'mock',
         'nose',
